@@ -15,15 +15,11 @@ import ReactFlow, {
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
-
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Eye, Hammer, RotateCcw, EyeOff} from "lucide-react";
 import "reactflow/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
+import StatusBar from "./_components/StatusBar";
 
 const initialNodes: Node[] = [
   {
@@ -54,9 +50,22 @@ const initialEdges: Edge[] = [];
 function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
+  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>(
+    []
+  );
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showSpecs, setShowSpecs] = useState(false);
+  // Specs
   const [budget, setBudget] = useState(50000);
+  const [totalBudget, setTotalBudget] = useState(50000);
+  const [powerConsume, setConsumeUsage] = useState(0);
+  const [powerRequired, setPowerRequired] = useState(0);
+  const [accomulatePower, setAccomulatePower] = useState(0);
+  const [occupedSurface, setOccupiedSurface] = useState(0);
+  const [totalSurface, setTotalSurface] = useState(0);
+  const [waterUsage, setWaterUsage] = useState(0);
+  const [distilledWaterUsage, setDistilledWaterUsage] = useState(0);
+  const [chilledWaterUsage, setChilledWaterUsage] = useState(0);
 
   const devices = [
     {
@@ -83,14 +92,12 @@ function FlowCanvas() {
   ];
   const [search, setSearch] = useState("");
 
-
-
-  const handleNodesChange = (changes) => {
+  const handleNodesChange = (changes: any) => {
     setHistory((prev) => [...prev, { nodes, edges }]);
     onNodesChange(changes);
   };
 
-  const handleEdgesChange = (changes) => {
+  const handleEdgesChange = (changes: any) => {
     setHistory((prev) => [...prev, { nodes, edges }]);
     onEdgesChange(changes);
   };
@@ -142,16 +149,20 @@ function FlowCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const addNode = (device: typeof devices[number]) => {
+  const addNode = (device: (typeof devices)[number]) => {
     if (budget < device.cost) return;
 
-    const id = `${device.name.toLowerCase().replace(" ", "-")}-${nodes.length + 1}`;
+    const id = `${device.name.toLowerCase().replace(" ", "-")}-${
+      nodes.length + 1
+    }`;
     const newNode: Node = {
       id,
       type: "default",
       position: { x: Math.random() * 600, y: Math.random() * 400 },
       data: {
-        label: `${device.icon === "Sun" ? "☀️" : device.icon === "Server" ? "🖥️" : "❄️"} ${device.name}\n($${device.cost})`,
+        label: `${
+          device.icon === "Sun" ? "☀️" : device.icon === "Server" ? "🖥️" : "❄️"
+        } ${device.name}\n($${device.cost})`,
         type: device.type,
         power: device.type === "source" ? 20 : undefined,
         demand: device.type === "sink" ? 10 : undefined,
@@ -169,33 +180,69 @@ function FlowCanvas() {
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
-        <div className="flex space-x-4 text-sm font-medium">
-          <span>💰 Available Budget: ${budget.toLocaleString()}</span>
-          <span>⚡ Power Usage: 0 kW</span>
-          <span>📏 Occupied Surface: 0 m²</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={handleSave}>
-            💾 Save
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => {
-              setNodes([]);
-              setEdges([]);
-              setHistory([]);
-              setBudget(50000);
-            }}
-          >
-            🔄 Reset
-          </Button>
-          <Button size="sm" onClick={() => setShowSidebar(!showSidebar)}>
-            {showSidebar ? "Hide Menu" : "Show Menu"}
-          </Button>
-        </div>
-      </div>
+    {/*Toogle Menu Bar */}
+      <Card className="mt-2">
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Button
+                className="bg-yellow-400 hover:bg-yellow-500 text-black"
+                onClick={() => setShowSpecs(!showSpecs)}
+              >
+                {showSpecs ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                {showSpecs ? "Hide Specs" : "Show Specs"}
+              </Button>
+
+              <Button
+                className="bg-red-500 hover:bg-red-600 text-white"
+                onClick={() => {
+                  setNodes([]);
+                  setEdges([]);
+                  setHistory([]);
+                  setBudget(50000);
+                }}
+              >
+                <RotateCcw className="w-4 h-4" />
+                Reset Design
+              </Button>
+
+              <Button className="bg-green-500 hover:bg-green-600 text-white">
+                <Hammer className="w-4 h-4" />
+                Build Simulation
+              </Button>
+            </div>
+            <Button
+              className="bg-purple-500 hover:bg-purple-600 text-white"
+              onClick={() => setShowSidebar(!showSidebar)}
+            >
+              {showSidebar ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+              {showSidebar ? "Hide Menu" : "Show Menu"}
+            </Button>
+          </div>
+        </CardContent>
+        {showSpecs && (
+          <StatusBar
+            budget={budget}
+            totalBudget={totalBudget}
+            powerConsume={powerConsume}
+            powerRequired={powerRequired}
+            accomulatePower={accomulatePower}
+            occupedSurface={occupedSurface}
+            totalSurface={totalSurface}
+            waterUsage={waterUsage}
+            distilledWaterUsage={distilledWaterUsage}
+            chilledWaterUsage={chilledWaterUsage}
+          />
+        )}
+      </Card>
 
       <div className="flex h-[calc(100vh-48px)]">
         <div className="flex-1">
@@ -243,7 +290,9 @@ function FlowCanvas() {
                         onClick={() => addNode(device)}
                       >
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                          <CardTitle className="text-sm font-medium">{device.name}</CardTitle>
+                          <CardTitle className="text-sm font-medium">
+                            {device.name}
+                          </CardTitle>
                           <span className="text-gray-500 text-xl">
                             <i data-lucide={device.icon}></i>
                           </span>
