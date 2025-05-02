@@ -15,11 +15,19 @@ import ReactFlow, {
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Eye, Hammer, RotateCcw, EyeOff} from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
+import { Eye, Hammer, RotateCcw, EyeOff, Save, Car, Search } from "lucide-react";
 import "reactflow/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import StatusBar from "./_components/StatusBar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 
 const initialNodes: Node[] = [
   {
@@ -81,6 +89,111 @@ function FlowCanvas() {
       icon: "Server",
       specs: ["Consumption: 10W", "Critical Load"],
       cost: 1500,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "source",
+      name: "Solar Panel",
+      icon: "Sun",
+      specs: ["Output: 20W", "Type: Renewable"],
+      cost: 2000,
+    },
+    {
+      type: "sink",
+      name: "Server",
+      icon: "Server",
+      specs: ["Consumption: 10W", "Critical Load"],
+      cost: 1500,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "source",
+      name: "Solar Panel",
+      icon: "Sun",
+      specs: ["Output: 20W", "Type: Renewable"],
+      cost: 2000,
+    },
+    {
+      type: "sink",
+      name: "Server",
+      icon: "Server",
+      specs: ["Consumption: 10W", "Critical Load"],
+      cost: 1500,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
+    },
+    {
+      type: "sink",
+      name: "Cooler",
+      icon: "Snowflake",
+      specs: ["Consumption: 5W", "Thermal Control"],
+      cost: 1000,
     },
     {
       type: "sink",
@@ -180,7 +293,7 @@ function FlowCanvas() {
 
   return (
     <>
-    {/*Toogle Menu Bar */}
+      {/*Toogle Menu Bar */}
       <Card className="mt-2">
         <CardContent>
           <div className="flex items-center justify-between">
@@ -215,17 +328,23 @@ function FlowCanvas() {
                 Build Simulation
               </Button>
             </div>
-            <Button
-              className="bg-purple-500 hover:bg-purple-600 text-white"
-              onClick={() => setShowSidebar(!showSidebar)}
-            >
-              {showSidebar ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-              {showSidebar ? "Hide Menu" : "Show Menu"}
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button>
+                <Save className="w-4 h-4" />
+                Safe
+              </Button>
+              <Button
+                className="bg-purple-500 hover:bg-purple-600 text-white"
+                onClick={() => setShowSidebar(!showSidebar)}
+              >
+                {showSidebar ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                {showSidebar ? "Hide Menu" : "Show Menu"}
+              </Button>
+            </div>
           </div>
         </CardContent>
         {showSpecs && (
@@ -243,7 +362,6 @@ function FlowCanvas() {
           />
         )}
       </Card>
-
       <div className="flex h-[calc(100vh-48px)]">
         <div className="flex-1">
           <ReactFlow
@@ -254,62 +372,114 @@ function FlowCanvas() {
             onConnect={onConnect}
             fitView
           >
-            <MiniMap />
-            <Controls />
+            {/* <MiniMap /> */}
+            {/* <Controls /> */}
             <Background />
           </ReactFlow>
         </div>
 
         {showSidebar && (
-          <div className="w-[300px] bg-white border-l p-4 space-y-4 overflow-y-auto">
-            <h3 className="text-lg font-semibold">Device Library</h3>
-            <input
-              type="text"
-              placeholder="Search devices..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm"
-            />
-
-            {["source", "sink"].map((section) => (
-              <div key={section}>
-                <h4 className="text-sm font-semibold mt-4 mb-2 capitalize">
-                  {section === "source" ? "Sources" : "Sinks"}
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {devices
-                    .filter(
-                      (d) =>
-                        d.type === section &&
-                        d.name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((device, index) => (
-                      <Card
-                        key={index}
-                        className="hover:bg-muted cursor-pointer aspect-square flex flex-col justify-between"
-                        onClick={() => addNode(device)}
-                      >
-                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                          <CardTitle className="text-sm font-medium">
-                            {device.name}
-                          </CardTitle>
-                          <span className="text-gray-500 text-xl">
-                            <i data-lucide={device.icon}></i>
-                          </span>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="text-xs text-muted-foreground list-disc list-inside">
-                            {device.specs.map((s, i) => (
-                              <li key={i}>{s}</li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
-                    ))}
+          <>
+            <Card className="w-[400px] bg-white border-l overflow-y-auto mt-2">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Devices</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Drag and drop devices to the canvas
+                </CardDescription>
+              </CardHeader>
+              <Separator />
+              <CardContent className="px-3 pt-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search device..."
+                    className="w-full pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
                 </div>
-              </div>
-            ))}
-          </div>
+              </CardContent>
+              <CardContent className="px-3 grid grid-cols-2 gap-3">
+                {devices
+                  .filter((device) =>
+                    device.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((device, index) => (
+                    <Card
+                      key={index}
+                      className="hover:bg-muted cursor-pointer aspect-square"
+                      onClick={() => addNode(device)}
+                    >
+                      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                        <CardTitle className="text-sm font-medium">
+                          {device.name}
+                        </CardTitle>
+                        <span className="text-gray-500 text-xl">
+                          <i data-lucide={device.icon}></i>
+                        </span>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="text-xs text-muted-foreground list-disc list-inside">
+                          {device.specs.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </CardContent>
+            </Card>
+            {/* <div className="w-[300px] bg-white border-l p-4 space-y-4 overflow-y-auto">
+              <h3 className="text-lg font-semibold">Device Library</h3>
+              <input
+                type="text"
+                placeholder="Search devices..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm"
+              />
+
+              {["source", "sink"].map((section) => (
+                <div key={section}>
+                  <h4 className="text-sm font-semibold mt-4 mb-2 capitalize">
+                    {section === "source" ? "Sources" : "Sinks"}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {devices
+                      .filter(
+                        (d) =>
+                          d.type === section &&
+                          d.name.toLowerCase().includes(search.toLowerCase())
+                      )
+                      .map((device, index) => (
+                        <Card
+                          key={index}
+                          className="hover:bg-muted cursor-pointer aspect-square flex flex-col justify-between"
+                          onClick={() => addNode(device)}
+                        >
+                          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-sm font-medium">
+                              {device.name}
+                            </CardTitle>
+                            <span className="text-gray-500 text-xl">
+                              <i data-lucide={device.icon}></i>
+                            </span>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="text-xs text-muted-foreground list-disc list-inside">
+                              {device.specs.map((s, i) => (
+                                <li key={i}>{s}</li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div> */}
+          </>
         )}
       </div>
     </>
