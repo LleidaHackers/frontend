@@ -738,7 +738,7 @@ function FlowCanvas() {
                   setNodes([]);
                   setEdges([]);
                   setHistory([]);
-                  setBudget(0);
+                  setBudget(totalBudget);
                   setConsumeUsage(0);
                   setPowerRequired(0);
                   setAccomulatePower(0);
