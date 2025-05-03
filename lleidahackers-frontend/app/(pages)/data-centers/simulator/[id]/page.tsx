@@ -87,10 +87,10 @@ export default function SimulatorPage() {
                 </style>
               </defs>
 
-              <line x1="110" y1="120" x2="330" y2="220" stroke="url(#electric-flow)" strokeWidth="3" className="flow-line" />
-              <line x1="330" y1="220" x2="570" y2="120" stroke="url(#water-flow)" strokeWidth="3" className="flow-line" />
-              <line x1="110" y1="120" x2="120" y2="420" stroke="url(#electric-flow)" strokeWidth="3" className="flow-line" />
-              <line x1="330" y1="220" x2="520" y2="420" stroke="url(#water-flow)" strokeWidth="3" className="flow-line" />
+              <line x1="90" y1="120" x2="280" y2="220" stroke="url(#electric-flow)" strokeWidth="3" className="flow-line" />
+              <line x1="320" y1="220" x2="530" y2="120" stroke="url(#water-flow)" strokeWidth="3" className="flow-line" />
+              <line x1="90" y1="120" x2="110" y2="420" stroke="url(#electric-flow)" strokeWidth="3" className="flow-line" />
+              <line x1="320" y1="220" x2="500" y2="420" stroke="url(#water-flow)" strokeWidth="3" className="flow-line" />
             </svg>
           </div>
         </TabsContent>

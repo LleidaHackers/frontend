@@ -15,6 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           "--header-height": "calc(var(--spacing) * 12)",
         } as React.CSSProperties
       }
+      defaultOpen={false}
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
