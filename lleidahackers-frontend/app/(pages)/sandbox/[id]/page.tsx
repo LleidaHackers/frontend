@@ -46,6 +46,7 @@ import {
   Globe,
   Cpu,
   Database,
+  Lightbulb,
 } from "lucide-react";
 import "reactflow/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
@@ -66,7 +67,7 @@ type CustomNodeData = {
 const getResourceIcon = (type: string) => {
   switch (type) {
     case "power":
-      return <Bolt className="w-3 h-3 text-green-600" />;
+      return <Lightbulb className="w-3 h-3 text-yellow-500" />;
     case "water":
       return <Droplet className="w-3 h-3 text-blue-600" />;
     case "chilledWater":
@@ -495,10 +496,26 @@ function FlowCanvas() {
     setBudget((b) => b - device.cost);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const state = { nodes, edges };
-    console.log("Saved state:", state);
-    // Aquí podrías hacer un fetch POST a tu backend
+    console.log("Saving state:", state);
+    try {
+      const response = await fetch("/api/save-configuration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(state),
+      });
+
+      if (response.ok) {
+        console.log("Configuration saved successfully");
+      } else {
+        console.error("Failed to save configuration");
+      }
+    } catch (error) {
+      console.error("Error saving configuration:", error);
+    }
   };
 
   return (
@@ -539,9 +556,9 @@ function FlowCanvas() {
               </Button>
             </div>
             <div className="flex items-center space-x-2">
-              <Button>
+              <Button onClick={handleSave}>
                 <Save className="w-4 h-4" />
-                Safe
+                Save
               </Button>
               <Button
                 className="bg-purple-500 hover:bg-purple-600 text-white"
