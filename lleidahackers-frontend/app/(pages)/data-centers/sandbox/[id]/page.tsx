@@ -57,6 +57,7 @@ import StatusBar from "./_components/StatusBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 type CustomNodeData = {
   label: string;
   type: string;
@@ -293,6 +294,7 @@ function FlowCanvas() {
   const [devices, setDevices] = useState<Record<string, DeviceDefinition[]>>(
     {}
   );
+  const Router = useRouter();
   // Specs
   const [budget, setBudget] = useState(0);
   const [totalBudget, setTotalBudget] = useState(0);
@@ -314,6 +316,8 @@ function FlowCanvas() {
   const [externalNetworkProduction, setExternalNetworkProduction] = useState(0);
   const [procesProduction, setProcesProduction] = useState(0);
   const [dataStorageProduction, setDataStorageProduction] = useState(0);
+  // Data
+  const [id, setId] = useState("");
 
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -465,7 +469,12 @@ function FlowCanvas() {
   const loadWorkflow = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${backendUrl}/modules/get/${dataCenterId}`);
+      const response = await fetch(`${backendUrl}/workflow/${dataCenterId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       if (!response.ok) throw new Error("Invalid response");
 
       const parsed = await response.json();
@@ -507,9 +516,7 @@ function FlowCanvas() {
       const fetchDataCenterStats = async () => {
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-          const res = await fetch(
-            `${backendUrl}/modules/data-center/${dataCenterId}`
-          );
+          const res = await fetch(`${backendUrl}/data-center/${dataCenterId}`);
           const json = await res.json();
           console.log("Data center stats:", json);
           setTotalBudget(json.totalBudget ?? 0);
@@ -531,6 +538,8 @@ function FlowCanvas() {
           setExternalNetworkProduction(json.externalNetworkProduction ?? 0);
           setProcesProduction(json.procesProduction ?? 0);
           setDataStorageProduction(json.dataStorageProduction ?? 0);
+          setFreshWaterProduction(json.freshWaterProduction ?? 0);
+          setInternalNetworkProduction(json.internalNetworkProduction ?? 0);
         } catch (err) {
           console.error("Error loading data center stats", err);
         }
@@ -591,8 +600,8 @@ function FlowCanvas() {
     setWaterUsage((w) => w + device.waterUsage);
     setChilledWaterUsage((c) => c + device.chilledWaterUsage);
     setDistilledWaterUsage((d) => d + device.distilledWaterUsage);
-    setFreshWaterUsage((f) => f + (device.freshWaterUsage ?? 0));
-    setFreshWaterProduction((f) => f + (device.freshWaterProduction ?? 0));
+    setFreshWaterUsage((f) => f + (device.waterUsage ?? 0));
+    setFreshWaterProduction((f) => f + (device.waterProduction ?? 0));
     setDistilledWaterProduction(
       (d) => d + (device.distilledWaterProduction ?? 0)
     );
@@ -606,6 +615,9 @@ function FlowCanvas() {
     );
     setProcesProduction((p) => p + (device.procesProduction ?? 0));
     setDataStorageProduction((d) => d + (device.dataStorageProduction ?? 0));
+    setInternalNetworkProduction(
+      (n) => n + (device.internalNetworkProduction ?? 0)
+    );
   };
 
   const handleSave = async () => {
@@ -614,7 +626,7 @@ function FlowCanvas() {
     try {
       console.log("Saving configuration:", state);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save/${dataCenterId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/workflow/${dataCenterId}`,
         {
           method: "POST",
           headers: {
@@ -625,7 +637,7 @@ function FlowCanvas() {
       );
       // POST a /save-data-center/{id} con todas las estadísticas relevantes
       await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save-data-center/${dataCenterId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center/${dataCenterId}`,
         {
           method: "POST",
           headers: {
@@ -672,7 +684,7 @@ function FlowCanvas() {
   const getModules = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const fullUrl = `${backendUrl}/modules/modules`;
+      const fullUrl = `${backendUrl}/modules/`;
       const response = await fetch(fullUrl, {
         method: "GET",
         headers: {
@@ -726,7 +738,6 @@ function FlowCanvas() {
                   setEdges([]);
                   setHistory([]);
                   setBudget(0);
-                  setTotalBudget(0);
                   setConsumeUsage(0);
                   setPowerRequired(0);
                   setAccomulatePower(0);
@@ -735,13 +746,20 @@ function FlowCanvas() {
                   setWaterUsage(0);
                   setChilledWaterUsage(0);
                   setDistilledWaterUsage(0);
+                  setFreshWaterProduction(0);
+                  setInternalNetworkProduction(0);
                 }}
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset Design
               </Button>
 
-              <Button className="bg-green-500 hover:bg-green-600 text-white">
+              <Button
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={() =>
+                  Router.push(`/data-centers/simulator/${dataCenterId}`)
+                }
+              >
                 <Hammer className="w-4 h-4" />
                 Go to Simulation
               </Button>
