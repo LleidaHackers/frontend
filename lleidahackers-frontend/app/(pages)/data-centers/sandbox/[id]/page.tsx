@@ -114,12 +114,16 @@ const CustomNode = ({
         onClick={(e) => {
           e.stopPropagation();
           setNodes((nds) => nds.filter((n) => n.id !== id));
-          setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+          setEdges((eds) =>
+            eds.filter((e) => e.source !== id && e.target !== id)
+          );
         }}
       >
         ×
       </div>
-      <div className="text-center font-semibold">{data.label?.split("\n")[0]}</div>
+      <div className="text-center font-semibold">
+        {data.label?.split("\n")[0]}
+      </div>
       <div className="text-center text-xs text-muted-foreground mb-2">
         ${data.label?.match(/\(\$(\d+)\)/)?.[1] ?? "0"}
       </div>
@@ -255,7 +259,6 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data }: any) => {
   );
 };
 
-
 type DeviceDefinition = {
   name: string;
   icon: string;
@@ -356,11 +359,7 @@ function FlowCanvas() {
   const nodeTypes = useMemo(
     () => ({
       custom: (nodeProps: any) => (
-        <CustomNode
-          {...nodeProps}
-          setNodes={setNodes}
-          setEdges={setEdges}
-        />
+        <CustomNode {...nodeProps} setNodes={setNodes} setEdges={setEdges} />
       ),
     }),
     [setNodes, setEdges]
@@ -503,6 +502,23 @@ function FlowCanvas() {
   useEffect(() => {
     if (dataCenterId) {
       loadWorkflow();
+      // Fetch initial stats from backend
+      const fetchDataCenterStats = async () => {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+          const res = await fetch(
+            `${backendUrl}/modules/data-center/${dataCenterId}`
+          );
+          const json = await res.json();
+
+          setTotalBudget(json.budget ?? 0);
+          setBudget(json.budget ?? 0);
+          setTotalSurface((json.space_x ?? 0) * (json.space_y ?? 0));
+        } catch (err) {
+          console.error("Error loading data center stats", err);
+        }
+      };
+      fetchDataCenterStats();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataCenterId]);
@@ -517,8 +533,6 @@ function FlowCanvas() {
           onClick: () => toast.dismiss(),
         },
       });
-
-      return;
       return;
     }
     const id = `${device.name.toLowerCase().replace(/ /g, "-")}-${
@@ -553,6 +567,12 @@ function FlowCanvas() {
     };
     setNodes((nds) => [...nds, newNode]);
     setBudget((b) => b - device.cost);
+    setOccupiedSurface((s) => s + device.surface);
+    setConsumeUsage((c) => c + device.energyConsumption);
+    setAccomulatePower((p) => p + device.energyProduction);
+    setWaterUsage((w) => w + device.waterUsage);
+    setChilledWaterUsage((c) => c + device.chilledWaterUsage);
+    setDistilledWaterUsage((d) => d + device.distilledWaterUsage);
   };
 
   const handleSave = async () => {
@@ -649,7 +669,7 @@ function FlowCanvas() {
 
               <Button className="bg-green-500 hover:bg-green-600 text-white">
                 <Hammer className="w-4 h-4" />
-                Build Simulation
+                Go to Simulation
               </Button>
             </div>
             <div className="flex items-center space-x-2">
