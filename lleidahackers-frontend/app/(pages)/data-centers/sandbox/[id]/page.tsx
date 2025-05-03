@@ -844,6 +844,100 @@ function FlowCanvas() {
                 <CardDescription className="text-sm text-muted-foreground">
                   Drag and drop devices to the canvas
                 </CardDescription>
+                <div className="flex gap-x-2">
+                  {/* Autocomplete with AI button */}
+                  <Button
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={() => {
+                      // Nodo y conexión de ejemplo
+                      const suggestedNodes: Node<CustomNodeData>[] = [
+                        {
+                          id: "auto-solar",
+                          type: "custom",
+                          position: { x: 100, y: 100 },
+                          data: {
+                            label: "☀️ Solar Auto\n($2000)",
+                            type: "source",
+                            power: 20,
+                            inputs: [],
+                            outputs: ["Usable_Power"],
+                            surface: 2,
+                          },
+                          style: {
+                            borderRadius: 8,
+                            padding: 8,
+                            backgroundColor: "#ECFDF5",
+                            border: "1px solid #CBD5E1",
+                            animation: "pulse 2s infinite",
+                          },
+                        },
+                        {
+                          id: "auto-server",
+                          type: "custom",
+                          position: { x: 400, y: 100 },
+                          data: {
+                            label: "🖥️ Server Auto\n(Needs: 10W)",
+                            type: "sink",
+                            demand: 10,
+                            inputs: ["Usable_Power"],
+                            outputs: [],
+                            surface: 2,
+                          },
+                          style: {
+                            borderRadius: 8,
+                            padding: 8,
+                            backgroundColor: "#EEF2FF",
+                            border: "1px solid #CBD5E1",
+                            animation: "pulse 2s infinite",
+                          },
+                        },
+                      ];
+
+                      const suggestedEdges: Edge[] = [
+                        {
+                          id: "auto-edge-1",
+                          source: "auto-solar",
+                          target: "auto-server",
+                          sourceHandle: "Usable_Power-out",
+                          targetHandle: "Usable_Power-in",
+                          type: "custom",
+                          data: { label: "Usable_Power" },
+                        },
+                      ];
+
+                      setNodes((prev) => [...prev, ...suggestedNodes]);
+                      setEdges((prev) => [...prev, ...suggestedEdges]);
+
+                      toast.info(
+                        "Suggested layout loaded. Click 'Apply Suggestions' to keep it."
+                      );
+                    }}
+                  >
+                    🤖 Autocomplete with AI
+                  </Button>
+
+                  {/* Apply Suggestions button */}
+                  {nodes.some((n) => n.id.startsWith("auto-")) && (
+                    <Button
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                      onClick={() => {
+                        setNodes((prev) =>
+                          prev.map((node) =>
+                            node.id.startsWith("auto-")
+                              ? {
+                                  ...node,
+                                  style: { ...node.style, animation: undefined },
+                                }
+                              : node
+                          )
+                        );
+                        toast.success("Suggestions applied");
+                      }}
+                    >
+                      ✅ Apply
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <Separator />
               <CardContent className="px-3 pt-0">
@@ -926,6 +1020,11 @@ function FlowCanvas() {
                                     Units
                                   </div>
                                 )}
+                                {/* {device.dataStorageProduction > 0 && (
+                                  <div>
+                                    Storage 🗄️ {device.dataStorageProduction} GB
+                                    </div>
+                                )} */}
                               </CardContent>
                             </Card>
                           );
@@ -948,4 +1047,27 @@ export default function Page() {
       <FlowCanvas />
     </ReactFlowProvider>
   );
+}
+
+// Pulse animation CSS for AI suggestions
+if (typeof window !== "undefined") {
+  const styleId = "pulse-keyframes-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+`;
+    document.head.appendChild(style);
+  }
 }
