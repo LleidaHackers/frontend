@@ -5,7 +5,7 @@ import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-
+import "leaflet/dist/leaflet.css";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider

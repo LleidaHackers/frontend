@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { HousePlug } from "lucide-react";
+import { HousePlug, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -90,7 +90,7 @@ export default function DataCentersPage() {
                   router.refresh();
                 }}
               >
-                🗑
+                <Trash className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex items-center justify-center">

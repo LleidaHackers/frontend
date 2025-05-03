@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+
 import {
   Select,
   SelectContent,
@@ -97,6 +99,8 @@ const createDataCenter = () => {
           },
           body: JSON.stringify({
             ...data,
+            latituid: latitude,
+            longitud: longitude,
           }),
         }
       );
@@ -117,6 +121,26 @@ const createDataCenter = () => {
       toast.error(error.message || "Failed to create data center");
     }
   }
+  const [latitude, setLatitude] = useState("41.387");
+  const [longitude, setLongitude] = useState("2.168");
+  const [markerPosition, setMarkerPosition] = useState({
+    lat: 41.387,
+    lng: 2.168,
+  });
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+  });
+
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setMarkerPosition({ lat, lng });
+      setLatitude(lat.toString());
+      setLongitude(lng.toString());
+    }
+  };
   return (
     <div className="p-8 text-lg">
       <Form {...form}>
@@ -306,6 +330,19 @@ const createDataCenter = () => {
                     )}
                   />
                 </div>
+                {isLoaded && (
+                  <div className="mt-4">
+                    <h2 className="my-2 font-bold">Select Location:</h2>
+                    <GoogleMap
+                      mapContainerStyle={{ width: "100%", height: "300px" }}
+                      center={markerPosition}
+                      zoom={6}
+                      onClick={handleMapClick}
+                    >
+                      <Marker position={markerPosition} />
+                    </GoogleMap>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="items-center justify-center flex pt-2">
                 <Button type="submit" className="text-base h-10 px-6">
