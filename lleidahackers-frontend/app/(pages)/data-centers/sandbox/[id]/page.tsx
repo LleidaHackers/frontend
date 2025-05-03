@@ -47,10 +47,12 @@ import {
   Database,
   Lightbulb,
   HelpCircle,
+  Loader2,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import "reactflow/dist/style.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { useParams } from "next/navigation";
 import StatusBar from "./_components/StatusBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -88,15 +90,35 @@ const getResourceIcon = (type: string) => {
   }
 };
 
-const CustomNode = ({ data }: { data: CustomNodeData }) => {
+const CustomNode = ({
+  id,
+  data,
+  setNodes,
+  setEdges,
+}: {
+  id: string;
+  data: CustomNodeData;
+  setNodes: React.Dispatch<React.SetStateAction<Node<CustomNodeData>[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+}) => {
   return (
     <div
-      className="relative rounded-md border p-3 text-sm shadow-md min-w-[140px]"
+      className="group relative rounded-md border p-3 text-sm shadow-md min-w-[140px]"
       style={{
         backgroundColor: data?.style?.backgroundColor ?? "#FFF",
         border: "1px solid #CBD5E1",
       }}
     >
+      <div
+        className="absolute -top-5 -right-5 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center cursor-pointer z-50 shadow-md"
+        onClick={(e) => {
+          e.stopPropagation();
+          setNodes((nds) => nds.filter((n) => n.id !== id));
+          setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+        }}
+      >
+        ×
+      </div>
       <div className="font-semibold text-center whitespace-pre-line">
         {data.label}
       </div>
@@ -223,9 +245,6 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data }: any) => {
   );
 };
 
-const nodeTypes = {
-  custom: CustomNode,
-};
 
 type DeviceDefinition = {
   name: string;
@@ -278,8 +297,10 @@ const test = [
 ];
 
 function FlowCanvas() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const params = useParams();
+  const dataCenterId = params?.id as string;
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>(
     []
   );
@@ -302,6 +323,7 @@ function FlowCanvas() {
   const [chilledWaterUsage, setChilledWaterUsage] = useState(0);
 
   const [search, setSearch] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const handleNodesChange = (changes: any) => {
     setHistory((prev) => [...prev, { nodes, edges }]);
@@ -313,9 +335,26 @@ function FlowCanvas() {
     onEdgesChange(changes);
   };
 
-  const edgeTypes: EdgeTypes = {
-    custom: CustomEdge,
-  };
+  const edgeTypes: EdgeTypes = useMemo(
+    () => ({
+      custom: CustomEdge,
+    }),
+    []
+  );
+
+  // nodeTypes must be defined inside FlowCanvas to access setNodes and setEdges
+  const nodeTypes = useMemo(
+    () => ({
+      custom: (nodeProps: any) => (
+        <CustomNode
+          {...nodeProps}
+          setNodes={setNodes}
+          setEdges={setEdges}
+        />
+      ),
+    }),
+    [setNodes, setEdges]
+  );
 
   // Nueva conexión: validación por tipo de recurso
   const onConnect = useCallback((connection: Connection) => {
@@ -337,10 +376,10 @@ function FlowCanvas() {
     }
   }, []);
 
-  // No cambiamos la lógica de powered sinks, pero podrías adaptarla a nuevos tipos si lo deseas.
+  // Optimización: actualiza nodos solo si realmente cambian para evitar renders innecesarios
   useEffect(() => {
-    // TODO: Adaptar si es necesario para más tipos
     const powerSources = nodes.filter((n) => n.data.type === "source");
+
     const sinks = nodes.map((n) => {
       if (n.data.type === "sink") {
         const isConnected = edges.some(
@@ -359,7 +398,6 @@ function FlowCanvas() {
       return n;
     });
 
-    // --- Color dynamic logic for fully connected inputs ---
     const updatedNodes = sinks.map((node) => {
       const requiredInputs = node.data.inputs?.length || 0;
       const connectedInputs = edges.filter(
@@ -385,7 +423,13 @@ function FlowCanvas() {
       };
     });
 
-    setNodes(updatedNodes);
+    const hasChanged =
+      JSON.stringify(nodes.map((n) => ({ ...n, position: undefined }))) !==
+      JSON.stringify(updatedNodes.map((n) => ({ ...n, position: undefined })));
+
+    if (hasChanged) {
+      setNodes(updatedNodes);
+    }
   }, [edges]);
 
   useEffect(() => {
@@ -407,8 +451,39 @@ function FlowCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Crear nodo desde device (adaptado a modules.json)
-  // Toast for budget error
+  // Cargar workflow desde backend o usar por defecto
+  const loadWorkflow = async () => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const response = await fetch(`${backendUrl}/modules/workflow/${dataCenterId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.nodes && data?.edges) {
+          setNodes(data.nodes);
+          setEdges(data.edges);
+        } else {
+          // Si no hay workflow guardado, carga nodos por defecto
+          setNodes(initialNodes);
+          setEdges(initialEdges);
+        }
+      } else {
+        // Si no existe aún
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+      }
+    } catch (error) {
+      console.error("Error loading workflow:", error);
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    }
+  };
+
+  useEffect(() => {
+    if (dataCenterId) {
+      loadWorkflow();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataCenterId]);
 
   const addNode = (device: DeviceDefinition) => {
     if (budget < device.cost) {
@@ -460,23 +535,28 @@ function FlowCanvas() {
 
   const handleSave = async () => {
     const state = { nodes, edges };
-    console.log("Saving state:", state);
+    setSaving(true);
     try {
-      const response = await fetch("/api/save-configuration", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(state),
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save/${dataCenterId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(state),
+        }
+      );
       if (response.ok) {
-        console.log("Configuration saved successfully");
+        toast.success("Configuration saved successfully");
       } else {
-        console.error("Failed to save configuration");
+        toast.error("Failed to save configuration");
       }
     } catch (error) {
+      toast.error("Error saving configuration");
       console.error("Error saving configuration:", error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -549,9 +629,18 @@ function FlowCanvas() {
               </Button>
             </div>
             <div className="flex items-center space-x-2">
-              <Button onClick={handleSave}>
-                <Save className="w-4 h-4" />
-                Save
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-1" />
+                    Save
+                  </>
+                )}
               </Button>
               <Button
                 className="bg-purple-500 hover:bg-purple-600 text-white"
