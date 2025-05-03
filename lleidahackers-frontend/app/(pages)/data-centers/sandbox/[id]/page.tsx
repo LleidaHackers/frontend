@@ -68,22 +68,26 @@ type CustomNodeData = {
 };
 
 const getResourceIcon = (type: string) => {
-  switch (type) {
+  const normalized = type.toLowerCase();
+
+  switch (normalized) {
     case "power":
+    case "usable_power":
       return <Lightbulb className="w-3 h-3 text-yellow-500" />;
     case "water":
       return <Droplet className="w-3 h-3 text-blue-600" />;
-    case "chilledWater":
+    case "Fresh_Water":
       return <Snowflake className="w-3 h-3 text-cyan-600" />;
-    case "distilledWater":
+    case "distilledwater":
       return <FlaskConical className="w-3 h-3 text-indigo-600" />;
-    case "internalNetwork":
+    case "internalnetwork":
+    case "interal_network":
       return <Network className="w-3 h-3 text-orange-600" />;
-    case "externalNetwork":
+    case "externalnetwork":
       return <Globe className="w-3 h-3 text-emerald-600" />;
     case "proces":
       return <Cpu className="w-3 h-3 text-gray-700" />;
-    case "dataStorage":
+    case "datastorage":
       return <Database className="w-3 h-3 text-purple-700" />;
     default:
       return <span className="text-xs">{type}</span>;
@@ -95,11 +99,25 @@ const CustomNode = ({
   data,
   setNodes,
   setEdges,
+  setBudget,
+  setOccupiedSurface,
+  setConsumeUsage,
+  setAccomulatePower,
+  setWaterUsage,
+  setChilledWaterUsage,
+  setDistilledWaterUsage,
 }: {
   id: string;
   data: CustomNodeData;
   setNodes: React.Dispatch<React.SetStateAction<Node<CustomNodeData>[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  setBudget: React.Dispatch<React.SetStateAction<number>>;
+  setOccupiedSurface: React.Dispatch<React.SetStateAction<number>>;
+  setConsumeUsage: React.Dispatch<React.SetStateAction<number>>;
+  setAccomulatePower: React.Dispatch<React.SetStateAction<number>>;
+  setWaterUsage: React.Dispatch<React.SetStateAction<number>>;
+  setChilledWaterUsage: React.Dispatch<React.SetStateAction<number>>;
+  setDistilledWaterUsage: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   return (
     <div
@@ -114,9 +132,18 @@ const CustomNode = ({
         onClick={(e) => {
           e.stopPropagation();
           setNodes((nds) => nds.filter((n) => n.id !== id));
-          setEdges((eds) =>
-            eds.filter((e) => e.source !== id && e.target !== id)
-          );
+          setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+
+          setBudget((b) => b + (data.label?.match(/\(\$(\d+)\)/)?.[1] ? parseInt(data.label.match(/\(\$(\d+)\)/)?.[1] ?? "0", 10) : 0));
+          // Extract surface from data or from label using regex
+          const surfaceMatch = data.label?.match(/\(.*?(\d+)\s?m².*?\)/);
+          const surface = data.surface ?? (surfaceMatch ? parseInt(surfaceMatch[1], 10) : 0);
+          setOccupiedSurface((s) => s - surface);
+          setConsumeUsage((c) => c - (data.demand ?? 0));
+          setAccomulatePower((p) => p - (data.power ?? 0));
+          setWaterUsage((w) => w - (data.waterUsage ?? 0));
+          setChilledWaterUsage((c) => c - (data.chilledWaterUsage ?? 0));
+          setDistilledWaterUsage((d) => d - (data.distilledWaterUsage ?? 0));
         }}
       >
         ×
@@ -143,7 +170,7 @@ const CustomNode = ({
           style={{ position: "absolute", left: -24, top: 40 + idx * 20 }}
           className="flex items-center"
         >
-          {getResourceIcon(input)}
+          <div className="mr-1">{getResourceIcon(input)}</div>
           <Handle
             type="target"
             position={Position.Left}
@@ -164,7 +191,7 @@ const CustomNode = ({
         <div
           key={`output-${output}`}
           style={{ position: "absolute", right: -24, top: 40 + idx * 20 }}
-          className="flex items-center gap-1"
+          className="flex items-center"
         >
           <Handle
             type="source"
@@ -178,7 +205,7 @@ const CustomNode = ({
               borderRadius: "50%",
             }}
           />
-          {getResourceIcon(output)}
+          <div className="ml-1">{getResourceIcon(output)}</div>
         </div>
       ))}
     </div>
@@ -186,45 +213,7 @@ const CustomNode = ({
 };
 
 const initialNodes: Node<CustomNodeData>[] = [
-  {
-    id: "solar",
-    type: "custom",
-    position: { x: 100, y: 100 },
-    data: {
-      label: "☀️ Solar Panel\n(Energy Output: 20W)",
-      type: "source",
-      power: 20,
-      compatibleWith: ["sink"],
-      inputs: [],
-      outputs: ["power"],
-    },
-    style: {
-      borderRadius: 8,
-      padding: 8,
-      backgroundColor: "#ECFDF5",
-      border: "1px solid #CBD5E1",
-    },
-  },
-  {
-    id: "server",
-    type: "custom",
-    position: { x: 400, y: 100 },
-    data: {
-      label: "🖥️ Server\n(Needs: 10W)",
-      type: "sink",
-      demand: 10,
-      powered: false,
-      compatibleWith: ["source"],
-      inputs: ["power"],
-      outputs: [],
-    },
-    style: {
-      borderRadius: 8,
-      padding: 8,
-      backgroundColor: "#EEF2FF",
-      border: "1px solid #CBD5E1",
-    },
-  },
+
 ];
 
 const initialEdges: Edge[] = [];
@@ -283,31 +272,7 @@ type DeviceDefinition = {
   type: string;
 };
 
-const test = [
-  {
-    name: "Solar Panel",
-    icon: "Sun",
-    cost: 2000,
-    surface: 2,
-    energyConsumption: 20,
-    energyProduction: 20,
-    waterUsage: 0,
-    waterProduction: 0,
-    chilledWaterUsage: 0,
-    chilledWaterProduction: 0,
-    distilledWaterUsage: 0,
-    distilledWaterProduction: 0,
-    internalNetworkUsage: 2,
-    internalNetworkProduction: 2,
-    externalNetworkProduction: 0,
-    soundLevel: 0,
-    procesProduction: 0,
-    dataStorageProduction: 0,
-    inputs: ["chilledWater", "distilledWater"],
-    outputs: ["power"],
-    type: "source",
-  },
-];
+
 
 function FlowCanvas() {
   const params = useParams();
@@ -359,10 +324,21 @@ function FlowCanvas() {
   const nodeTypes = useMemo(
     () => ({
       custom: (nodeProps: any) => (
-        <CustomNode {...nodeProps} setNodes={setNodes} setEdges={setEdges} />
+        <CustomNode
+          {...nodeProps}
+          setNodes={setNodes}
+          setEdges={setEdges}
+          setBudget={setBudget}
+          setOccupiedSurface={setOccupiedSurface}
+          setConsumeUsage={setConsumeUsage}
+          setAccomulatePower={setAccomulatePower}
+          setWaterUsage={setWaterUsage}
+          setChilledWaterUsage={setChilledWaterUsage}
+          setDistilledWaterUsage={setDistilledWaterUsage}
+        />
       ),
     }),
-    [setNodes, setEdges]
+    [setNodes, setEdges, setBudget, setOccupiedSurface, setConsumeUsage, setAccomulatePower, setWaterUsage, setChilledWaterUsage, setDistilledWaterUsage]
   );
 
   // Nueva conexión: validación por tipo de recurso
@@ -552,6 +528,7 @@ function FlowCanvas() {
         demand: device.energyConsumption,
         inputs: device.inputs,
         outputs: device.outputs,
+        surface: device.surface, // Ensure surface is available in data
       },
       style: {
         borderRadius: 8,
@@ -779,46 +756,32 @@ function FlowCanvas() {
                               className="hover:bg-muted cursor-pointer"
                               onClick={() => addNode(device)}
                             >
-                              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                <CardTitle className="text-sm font-medium">
-                                  {device.name}
+                              <CardHeader className="items-center text-center pb-2 space-y-1">
+                                {LucideIcon && <LucideIcon className="w-5 h-5 text-primary mx-auto" />}
+                                <CardTitle className="text-base font-bold">
+                                  {device.name.replace(new RegExp(`^${type}_?`, "i"), "")}
                                 </CardTitle>
-                                <span className="text-gray-500 text-xl">
-                                  {LucideIcon ? (
-                                    <LucideIcon className="w-4 h-4 text-muted-foreground" />
-                                  ) : (
-                                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                </span>
+                                <div className="text-sm text-muted-foreground">${device.cost}</div>
                               </CardHeader>
-                              <CardContent>
-                                <ul className="text-xs text-muted-foreground list-disc list-inside">
-                                  <li>
-                                    <strong>Cost:</strong> ${device.cost}
-                                  </li>
-                                  <li>
-                                    <strong>Surface:</strong> {device.surface}{" "}
-                                    m²
-                                  </li>
-                                  {Object.entries(device)
-                                    .filter(
-                                      ([key, val]) =>
-                                        typeof val === "number" &&
-                                        val !== 0 &&
-                                        key !== "cost" &&
-                                        key !== "surface"
-                                    )
-                                    .map(([key, val]) => (
-                                      <li key={key}>
-                                        {key
-                                          .replace(/([A-Z])/g, " $1")
-                                          .replace(/^./, (str) =>
-                                            str.toUpperCase()
-                                          )}
-                                        : {val}
-                                      </li>
-                                    ))}
-                                </ul>
+                              <CardContent className="text-xs text-muted-foreground text-center px-2">
+                                {device.energyProduction > 0 && (
+                                  <div>Produces ⚡ {device.energyProduction}W</div>
+                                )}
+                                {device.energyConsumption > 0 && (
+                                  <div>Consumes ⚡ {device.energyConsumption}W</div>
+                                )}
+                                {device.waterProduction > 0 && (
+                                  <div>Produces 💧 {device.waterProduction}L</div>
+                                )}
+                                {device.waterUsage > 0 && (
+                                  <div>Consumes 💧 {device.waterUsage}L</div>
+                                )}
+                                {device.dataStorageProduction > 0 && (
+                                  <div>Storage 🗄️ {device.dataStorageProduction}GB</div>
+                                )}
+                                {device.procesProduction > 0 && (
+                                  <div>Processing 🧠 {device.procesProduction} Units</div>
+                                )}
                               </CardContent>
                             </Card>
                           );
