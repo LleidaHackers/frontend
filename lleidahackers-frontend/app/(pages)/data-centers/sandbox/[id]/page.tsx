@@ -47,12 +47,13 @@ import {
   Database,
   Lightbulb,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import "reactflow/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import StatusBar from "./_components/StatusBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-
+import { toast } from "sonner";
 type CustomNodeData = {
   label: string;
   type: string;
@@ -268,12 +269,11 @@ const test = [
 function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>(
-    []
-  );
+  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const [showSidebar, setShowSidebar] = useState(true);
   const [showSpecs, setShowSpecs] = useState(false);
-  const [devices, setDevices] = useState<DeviceDefinition[]>([]);
+  // Agrupado por tipo
+  const [devices, setDevices] = useState<Record<string, DeviceDefinition[]>>({});
   // Specs
   const [budget, setBudget] = useState(50000);
   const [totalBudget, setTotalBudget] = useState(50000);
@@ -302,32 +302,32 @@ function FlowCanvas() {
     custom: CustomEdge,
   };
 
+  // Nueva conexión: validación por tipo de recurso
   const onConnect = useCallback(
     (connection: Connection) => {
-      const sourceNode = nodes.find((n) => n.id === connection.source);
-      const targetNode = nodes.find((n) => n.id === connection.target);
-      if (
-        sourceNode?.data?.compatibleWith?.includes(targetNode?.data?.type) &&
-        targetNode?.data?.compatibleWith?.includes(sourceNode?.data?.type)
-      ) {
+      const sourceHandle = connection.sourceHandle?.split("-")[0];
+      const targetHandle = connection.targetHandle?.split("-")[0];
+      if (sourceHandle === targetHandle) {
         setEdges((eds) =>
           addEdge(
             {
               ...connection,
               type: "custom",
-              data: { label: "⚡ Power" },
+              data: { label: sourceHandle },
             },
             eds
           )
         );
       } else {
-        alert("These nodes are incompatible and cannot be connected.");
+        alert("Incompatible connection types");
       }
     },
-    [nodes]
+    []
   );
 
+  // No cambiamos la lógica de powered sinks, pero podrías adaptarla a nuevos tipos si lo deseas.
   useEffect(() => {
+    // TODO: Adaptar si es necesario para más tipos
     const powerSources = nodes.filter((n) => n.data.type === "source");
     const sinks = nodes.map((n) => {
       if (n.data.type === "sink") {
@@ -369,29 +369,53 @@ function FlowCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const addNode = (device: DeviceDefinition) => {
-    if (budget < device.cost) return;
+  // Crear nodo desde device (adaptado a modules.json)
+  // Toast for budget error
 
-    const id = `${device.name.toLowerCase().replace(" ", "-")}-${
+  const addNode = (device: DeviceDefinition) => {
+    if (budget < device.cost) {
+      toast.error(
+        "Insufficient budget",
+        {
+          description: `You need $${device.cost} to add this device.`,
+          duration: 3000,
+          action: {
+            label: "OK",
+            onClick: () => toast.dismiss(),
+          },
+        }
+      );
+
+      return;
+      return;
+    }
+    const id = `${device.name.toLowerCase().replace(/ /g, "-")}-${
       nodes.length + 1
     }`;
     const newNode: Node<CustomNodeData> = {
       id,
       type: "custom",
-      position: { x: Math.random() * 600, y: Math.random() * 400 },
+      position: {
+        x: typeof window !== "undefined" ? Math.random() * 600 : 100,
+        y: typeof window !== "undefined" ? Math.random() * 400 : 100,
+      },
       data: {
         label: `${device.name}\n($${device.cost})`,
         type: device.type,
-        power: device.outputs.includes("power") ? 20 : undefined,
-        demand: device.inputs.includes("power") ? 10 : undefined,
-        compatibleWith: device.type === "source" ? ["sink"] : ["source"],
+        power: device.energyProduction,
+        demand: device.energyConsumption,
         inputs: device.inputs,
         outputs: device.outputs,
       },
       style: {
         borderRadius: 8,
         padding: 8,
-        backgroundColor: device.type === "source" ? "#ECFDF5" : "#EEF2FF",
+        backgroundColor:
+          device.energyProduction > 0
+            ? "#ECFDF5"
+            : device.energyConsumption > 0
+            ? "#FEF3C7"
+            : "#EEF2FF",
         border: "1px solid #CBD5E1",
       },
     };
@@ -421,12 +445,11 @@ function FlowCanvas() {
     }
   };
 
+  // Agrupa los módulos por tipo
   const getModules = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      console.log("Backend URL:", backendUrl);
       const fullUrl = `${backendUrl}/modules/modules`;
-      console.log("Fetching from:", fullUrl);
       const response = await fetch(fullUrl, {
         method: "GET",
         headers: {
@@ -435,13 +458,21 @@ function FlowCanvas() {
       });
       if (response.ok) {
         const data = await response.json();
-        setDevices(data);
-        console.log("Modules:", data);
+        // Agrupamos por tipo usando el objeto real de modules.json
+        const grouped: Record<string, DeviceDefinition[]> = {};
+        for (const category of Object.keys(data)) {
+          const modules = data[category];
+          for (const mod of modules) {
+            if (!grouped[mod.type]) grouped[mod.type] = [];
+            grouped[mod.type].push(mod);
+          }
+        }
+        setDevices(grouped);
       }
     } catch (error) {
       console.error("Error fetching modules:", error);
     }
-  }
+  };
   useEffect(() => {
     getModules();
   }, []);
@@ -560,7 +591,7 @@ function FlowCanvas() {
                 {Object.entries(devices).map(([type, items]) => (
                   <div key={type}>
                     <h3 className="text-sm font-semibold mb-2 text-muted-foreground capitalize">
-                      {type === "source" ? "Power Sources" : "Consumers"}
+                      {type.replace(/_/g, " ")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       {items
@@ -569,44 +600,56 @@ function FlowCanvas() {
                             .toLowerCase()
                             .includes(search.toLowerCase())
                         )
-                        .map((device, index) => (
-                          <Card
-                            key={`${type}-${index}`}
-                            className="hover:bg-muted cursor-pointer"
-                            onClick={() => addNode(device)}
-                          >
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                              <CardTitle className="text-sm font-medium">
-                                {device.name}
-                              </CardTitle>
-                              <span className="text-gray-500 text-xl">
-                                <i data-lucide={device.icon}></i>
-                              </span>
-                            </CardHeader>
-                            <CardContent>
-                              <ul className="text-xs text-muted-foreground list-disc list-inside">
-                                {Object.entries(device)
-                                  .filter(
-                                    ([key, val]) =>
-                                      typeof val === "number" &&
-                                      val !== 0 &&
-                                      key !== "cost" &&
-                                      key !== "surface"
-                                  )
-                                  .map(([key, val]) => (
-                                    <li key={key}>
-                                      {key
-                                        .replace(/([A-Z])/g, " $1")
-                                        .replace(/^./, (str) =>
-                                          str.toUpperCase()
-                                        )}
-                                      : {val}
-                                    </li>
-                                  ))}
-                              </ul>
-                            </CardContent>
-                          </Card>
-                        ))}
+                        .map((device, index) => {
+                          const LucideIcon =
+                            LucideIcons[
+                              device.icon as keyof typeof LucideIcons
+                            ];
+                          return (
+                            <Card
+                              key={`${type}-${index}`}
+                              className="hover:bg-muted cursor-pointer"
+                              onClick={() => addNode(device)}
+                            >
+                              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                <CardTitle className="text-sm font-medium">
+                                  {device.name}
+                                </CardTitle>
+                                <span className="text-gray-500 text-xl">
+                                  {LucideIcon ? (
+                                    <LucideIcon className="w-4 h-4 text-muted-foreground" />
+                                  ) : (
+                                    <i data-lucide={device.icon}></i>
+                                  )}
+                                </span>
+                              </CardHeader>
+                              <CardContent>
+                                <ul className="text-xs text-muted-foreground list-disc list-inside">
+                                  <li><strong>Cost:</strong> ${device.cost}</li>
+                                  <li><strong>Surface:</strong> {device.surface} m²</li>
+                                  {Object.entries(device)
+                                    .filter(
+                                      ([key, val]) =>
+                                        typeof val === "number" &&
+                                        val !== 0 &&
+                                        key !== "cost" &&
+                                        key !== "surface"
+                                    )
+                                    .map(([key, val]) => (
+                                      <li key={key}>
+                                        {key
+                                          .replace(/([A-Z])/g, " $1")
+                                          .replace(/^./, (str) =>
+                                            str.toUpperCase()
+                                          )}
+                                        : {val}
+                                      </li>
+                                    ))}
+                                </ul>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                     </div>
                   </div>
                 ))}

@@ -1,0 +1,341 @@
+{
+    "transformers": [
+        {
+            "name": "Transformer_100",
+            "icon": "Bolt",
+            "cost": 1000,
+            "surface": 1800,
+            "energyConsumption": 0,
+            "energyProduction": 100,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Grid_Connection"
+            ],
+            "outputs": [
+                "Usable_Power"
+            ],
+            "type": "transformer"
+        },
+        {
+            "name": "Transformer_1000",
+            "icon": "Bolt",
+            "cost": 50000,
+            "surface": 10000,
+            "energyConsumption": 0,
+            "energyProduction": 1000,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Grid_Connection"
+            ],
+            "outputs": [
+                "Usable_Power"
+            ],
+            "type": "transformer"
+        },
+        {
+            "name": "Transformer_5000",
+            "icon": "Bolt",
+            "cost": 250000,
+            "surface": 40000,
+            "energyConsumption": 0,
+            "energyProduction": 5000,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Grid_Connection"
+            ],
+            "outputs": [
+                "Usable_Power"
+            ],
+            "type": "transformer"
+        }
+    ],
+    "water_supplies": [
+        {
+            "name": "Water_Supply_100",
+            "icon": "Droplet",
+            "cost": 200,
+            "surface": 2500,
+            "energyConsumption": 0,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 100,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Water_Connection"
+            ],
+            "outputs": [
+                "Fresh_Water"
+            ],
+            "type": "water_supply"
+        },
+        {
+            "name": "Water_Supply_500",
+            "icon": "Droplet",
+            "cost": 400,
+            "surface": 15000,
+            "energyConsumption": 0,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 500,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Water_Connection"
+            ],
+            "outputs": [
+                "Fresh_Water"
+            ],
+            "type": "water_supply"
+        }
+    ],
+    "water_treatments": [
+        {
+            "name": "Water_Treatment_50",
+            "icon": "Filter",
+            "cost": 10000,
+            "surface": 2500,
+            "energyConsumption": 50,
+            "energyProduction": 0,
+            "waterUsage": 50,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 50,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Fresh_Water",
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Distlled_Water"
+            ],
+            "type": "water_treatment"
+        },
+        {
+            "name": "Water_Treatment_250",
+            "icon": "Filter",
+            "cost": 40000,
+            "surface": 40000,
+            "energyConsumption": 90,
+            "energyProduction": 0,
+            "waterUsage": 250,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 250,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Fresh_Water",
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Distlled_Water"
+            ],
+            "type": "water_treatment"
+        },
+        {
+            "name": "Water_Treatment_500",
+            "icon": "Filter",
+            "cost": 70000,
+            "surface": 160000,
+            "energyConsumption": 150,
+            "energyProduction": 0,
+            "waterUsage": 500,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 500,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Fresh_Water",
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Distlled_Water"
+            ],
+            "type": "water_treatment"
+        }
+    ],
+    "water_chillers": [
+        {
+            "name": "Water_Chiller_100",
+            "icon": "Snowflake",
+            "cost": 40000,
+            "surface": 10000,
+            "energyConsumption": 500,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 95,
+            "distilledWaterUsage": 100,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Distlled_Water",
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Chilled_Water"
+            ],
+            "type": "water_chiller"
+        },
+        {
+            "name": "Water_Chiller_400",
+            "icon": "Snowflake",
+            "cost": 150000,
+            "surface": 30000,
+            "energyConsumption": 1500,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 390,
+            "distilledWaterUsage": 400,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 0,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Distlled_Water",
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Chilled_Water"
+            ],
+            "type": "water_chiller"
+        }
+    ],
+    "network_racks": [
+        {
+            "name": "Network_Rack_50",
+            "icon": "Server",
+            "cost": 2000,
+            "surface": 1600,
+            "energyConsumption": 50,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 50,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Internal_Network"
+            ],
+            "type": "network_rack"
+        },
+        {
+            "name": "Network_Rack_200",
+            "icon": "Server",
+            "cost": 8000,
+            "surface": 6400,
+            "energyConsumption": 200,
+            "energyProduction": 0,
+            "waterUsage": 0,
+            "waterProduction": 0,
+            "chilledWaterUsage": 0,
+            "chilledWaterProduction": 0,
+            "distilledWaterUsage": 0,
+            "distilledWaterProduction": 0,
+            "internalNetworkUsage": 200,
+            "internalNetworkProduction": 0,
+            "externalNetworkProduction": 0,
+            "soundLevel": 0,
+            "procesProduction": 0,
+            "dataStorageProduction": 0,
+            "inputs": [
+                "Usable_Power"
+            ],
+            "outputs": [
+                "Internal_Network"
+            ],
+            "type": "network_rack"
+        }
+    ]
+}
