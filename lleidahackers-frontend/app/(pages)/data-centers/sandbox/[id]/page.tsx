@@ -721,7 +721,7 @@ function FlowCanvas() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Button
-                className="bg-yellow-400 hover:bg-yellow-500 text-black"
+                className="bg-yellow-400 hover:bg-yellow-500 text-black h-12 text-base px-5"
                 onClick={() => setShowSpecs(!showSpecs)}
               >
                 {showSpecs ? (
@@ -733,7 +733,7 @@ function FlowCanvas() {
               </Button>
 
               <Button
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-red-500 hover:bg-red-600 text-white h-12 text-base px-5"
                 onClick={() => {
                   setNodes([]);
                   setEdges([]);
@@ -761,7 +761,7 @@ function FlowCanvas() {
               </Button>
 
               <Button
-                className="bg-green-500 hover:bg-green-600 text-white"
+                className="bg-green-500 hover:bg-green-600 text-white h-12 text-base px-5"
                 onClick={() =>
                   Router.push(`/data-centers/simulator/${dataCenterId}`)
                 }
@@ -771,7 +771,7 @@ function FlowCanvas() {
               </Button>
             </div>
             <div className="flex items-center space-x-2">
-              <Button onClick={handleSave} disabled={saving}>
+              <Button className="h-12 text-base px-5" onClick={handleSave} disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -785,7 +785,7 @@ function FlowCanvas() {
                 )}
               </Button>
               <Button
-                className="bg-purple-500 hover:bg-purple-600 text-white"
+                className="bg-purple-500 hover:bg-purple-600 text-white h-12 text-base px-5"
                 onClick={() => setShowSidebar(!showSidebar)}
               >
                 {showSidebar ? (
@@ -853,7 +853,7 @@ function FlowCanvas() {
                 <div className="flex gap-x-2">
                   {/* Autocomplete with AI button */}
                   <Button
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    className="bg-blue-500 hover:bg-blue-600 text-white h-12 text-base px-5"
                     onClick={() => {
                       // Nodo y conexión de ejemplo
                       const suggestedNodes: Node<CustomNodeData>[] = [
@@ -913,6 +913,10 @@ function FlowCanvas() {
 
                       setNodes((prev) => [...prev, ...suggestedNodes]);
                       setEdges((prev) => [...prev, ...suggestedEdges]);
+                      setBudget((b) => b - 2000);
+                      setOccupiedSurface((s) => s + 4);
+                      setAccomulatePower((p) => p + 20);
+                      setConsumeUsage((c) => c + 10);
 
                       toast.info(
                         "Suggested layout loaded. Click 'Apply Suggestions' to keep it."
@@ -926,7 +930,7 @@ function FlowCanvas() {
                   {nodes.some((n) => n.id.startsWith("auto-")) &&
                     !hasAppliedAI && (
                       <Button
-                        className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white h-12 text-base px-5"
                         onClick={() => {
                           setNodes((prev) =>
                             prev.map((node) =>
