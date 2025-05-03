@@ -478,7 +478,7 @@ function FlowCanvas() {
   useEffect(() => {
     if (dataCenterId) {
       loadWorkflow();
-      // Fetch initial stats from backend
+      // Fetch initial stats from backend (extended to all stats)
       const fetchDataCenterStats = async () => {
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -486,10 +486,17 @@ function FlowCanvas() {
             `${backendUrl}/modules/data-center/${dataCenterId}`
           );
           const json = await res.json();
-
+          console.log("Data center stats:", json);
           setTotalBudget(json.budget ?? 0);
           setBudget(json.budget ?? 0);
           setTotalSurface((json.space_x ?? 0) * (json.space_y ?? 0));
+          setOccupiedSurface(json.occupedSurface ?? 0);
+          setConsumeUsage(json.powerConsume ?? 0);
+          setPowerRequired(json.powerRequired ?? 0);
+          setAccomulatePower(json.accomulatePower ?? 0);
+          setWaterUsage(json.waterUsage ?? 0);
+          setChilledWaterUsage(json.chilledWaterUsage ?? 0);
+          setDistilledWaterUsage(json.distilledWaterUsage ?? 0);
         } catch (err) {
           console.error("Error loading data center stats", err);
         }
@@ -567,6 +574,24 @@ function FlowCanvas() {
           body: JSON.stringify(state),
         }
       );
+      // POST a /save-data-center/{id} con las estadísticas actuales
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save-data-center/${dataCenterId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          budget,
+          powerConsume,
+          powerRequired,
+          accomulatePower,
+          occupedSurface,
+          totalSurface,
+          waterUsage,
+          distilledWaterUsage,
+          chilledWaterUsage,
+        }),
+      });
       if (response.ok) {
         toast.success("Configuration saved successfully");
       } else {
