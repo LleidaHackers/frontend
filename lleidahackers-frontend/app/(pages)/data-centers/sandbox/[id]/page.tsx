@@ -58,6 +58,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { set } from "zod";
 type CustomNodeData = {
   label: string;
   type: string;
@@ -508,7 +509,7 @@ function FlowCanvas() {
       setEdges(initialEdges);
     }
   };
-
+  const [hasAppliedAI, setHasAppliedAI] = useState(false);
   useEffect(() => {
     if (dataCenterId) {
       loadWorkflow();
@@ -748,6 +749,11 @@ function FlowCanvas() {
                   setDistilledWaterUsage(0);
                   setFreshWaterProduction(0);
                   setInternalNetworkProduction(0);
+                  setExternalNetworkProduction(0);
+                  setProcesProduction(0);
+                  setDataStorageProduction(0);
+                  setFreshWaterUsage(0);
+                  setInternalNetworkUsage(0);
                 }}
               >
                 <RotateCcw className="w-4 h-4" />
@@ -917,26 +923,31 @@ function FlowCanvas() {
                   </Button>
 
                   {/* Apply Suggestions button */}
-                  {nodes.some((n) => n.id.startsWith("auto-")) && (
-                    <Button
-                      className="bg-indigo-500 hover:bg-indigo-600 text-white"
-                      onClick={() => {
-                        setNodes((prev) =>
-                          prev.map((node) =>
-                            node.id.startsWith("auto-")
-                              ? {
-                                  ...node,
-                                  style: { ...node.style, animation: undefined },
-                                }
-                              : node
-                          )
-                        );
-                        toast.success("Suggestions applied");
-                      }}
-                    >
-                      ✅ Apply
-                    </Button>
-                  )}
+                  {nodes.some((n) => n.id.startsWith("auto-")) &&
+                    !hasAppliedAI && (
+                      <Button
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                        onClick={() => {
+                          setNodes((prev) =>
+                            prev.map((node) =>
+                              node.id.startsWith("auto-")
+                                ? {
+                                    ...node,
+                                    style: {
+                                      ...node.style,
+                                      animation: undefined,
+                                    },
+                                  }
+                                : node
+                            )
+                          );
+                          setHasAppliedAI(true); // Ocultar botón tras aplicar
+                          toast.success("Suggestions applied");
+                        }}
+                      >
+                        ✅ Apply
+                      </Button>
+                    )}
                 </div>
               </CardHeader>
               <Separator />
