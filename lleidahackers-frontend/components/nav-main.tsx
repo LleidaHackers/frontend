@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
+import { ModeToggle } from "./buttons/theme"
 
 export function NavMain({
   items,
@@ -35,6 +36,7 @@ export function NavMain({
               <span>Create new Center</span>
             </SidebarMenuButton>
           </SidebarMenuItem> */}
+          <ModeToggle />
         </SidebarMenu>
         <SidebarMenu >
           {items.map((item) => (

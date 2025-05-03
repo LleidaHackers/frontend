@@ -52,7 +52,6 @@ import {
   DatabaseZap,
   HardDrive,
   Waves,
-  CpuCooler,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import "reactflow/dist/style.css";

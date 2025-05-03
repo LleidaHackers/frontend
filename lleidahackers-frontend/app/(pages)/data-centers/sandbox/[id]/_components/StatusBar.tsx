@@ -82,16 +82,16 @@ export default function StatusBar({
           <div>
             Used:{" "}
             <span className={accomulatePower >= powerConsume ? "text-green-600" : "text-red-600"}>
-              {powerConsume} W
+              {powerConsume} MW
             </span>
           </div>
           <div>
             Required:{" "}
             <span className={accomulatePower >= powerRequired ? "text-green-600" : "text-red-600"}>
-              {powerRequired} W
+              {powerRequired} MW
             </span>
           </div>
-          <div>Accumulated: {accomulatePower} W</div>
+          <div>Accumulated: {accomulatePower} MW</div>
         </CardContent>
       </Card>
 
@@ -119,21 +119,21 @@ export default function StatusBar({
             <span className={freshWaterProduction >= freshWaterUsage ? "text-green-600" : "text-red-600"}>
               {freshWaterUsage}L
             </span>{" "}
-            / {freshWaterProduction}L
+            / {freshWaterProduction}KL
           </div>
           <div>
             Distilled:{" "}
             <span className={distilledWaterProduction >= distilledWaterUsage ? "text-green-600" : "text-red-600"}>
               {distilledWaterUsage}L
             </span>{" "}
-            / {distilledWaterProduction}L
+            / {distilledWaterProduction}KL
           </div>
           <div>
             Chilled:{" "}
             <span className={chilledWaterProduction >= chilledWaterUsage ? "text-green-600" : "text-red-600"}>
               {chilledWaterUsage}L
             </span>{" "}
-            / {chilledWaterProduction}L
+            / {chilledWaterProduction}KL
           </div>
         </CardContent>
       </Card>
@@ -164,7 +164,7 @@ export default function StatusBar({
         <CardHeader>
           <CardTitle>Data Storage Production</CardTitle>
         </CardHeader>
-        <CardContent>{dataStorageProduction} GB</CardContent>
+        <CardContent>{dataStorageProduction} PT</CardContent>
       </Card>
       {/* <Card>
         <CardHeader>
