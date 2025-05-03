@@ -11,6 +11,14 @@ import ReactFlow, {
   Edge,
   Node,
   ReactFlowProvider,
+  Handle,
+  Position,
+} from "reactflow";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  EdgeTypes,
 } from "reactflow";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +30,23 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { Eye, Hammer, RotateCcw, EyeOff, Save, Car, Search } from "lucide-react";
+import {
+  Eye,
+  Hammer,
+  RotateCcw,
+  EyeOff,
+  Save,
+  Car,
+  Search,
+  Bolt,
+  Droplet,
+  Snowflake,
+  FlaskConical,
+  Network,
+  Globe,
+  Cpu,
+  Database,
+} from "lucide-react";
 import "reactflow/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import StatusBar from "./_components/StatusBar";
@@ -35,18 +59,95 @@ type CustomNodeData = {
   power?: number;
   demand?: number;
   compatibleWith?: string[];
+  inputs?: string[];
+  outputs?: string[];
+};
+
+const getResourceIcon = (type: string) => {
+  switch (type) {
+    case "power":
+      return <Bolt className="w-3 h-3 text-green-600" />;
+    case "water":
+      return <Droplet className="w-3 h-3 text-blue-600" />;
+    case "chilledWater":
+      return <Snowflake className="w-3 h-3 text-cyan-600" />;
+    case "distilledWater":
+      return <FlaskConical className="w-3 h-3 text-indigo-600" />;
+    case "internalNetwork":
+      return <Network className="w-3 h-3 text-orange-600" />;
+    case "externalNetwork":
+      return <Globe className="w-3 h-3 text-emerald-600" />;
+    case "proces":
+      return <Cpu className="w-3 h-3 text-gray-700" />;
+    case "dataStorage":
+      return <Database className="w-3 h-3 text-purple-700" />;
+    default:
+      return <span className="text-xs">{type}</span>;
+  }
+};
+
+const CustomNode = ({ data }: { data: CustomNodeData }) => {
+  return (
+    <div className="relative bg-white rounded-md border border-gray-300 p-2 text-sm shadow-sm min-w-[120px]">
+      <div className="font-medium mb-1 whitespace-pre-line">{data.label}</div>
+      {data.inputs?.map((input, idx) => (
+        <div
+          key={`input-${input}`}
+          style={{ position: "absolute", left: -20, top: 10 + idx * 20 }}
+          className="flex items-center"
+        >
+          {getResourceIcon(input)}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id={`${input}-in`}
+            style={{
+              background: "#E5E7EB",
+              border: "1px solid #ccc",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+            }}
+          />
+        </div>
+      ))}
+      {data.outputs?.map((output, idx) => (
+        <div
+          key={`output-${output}`}
+          style={{ position: "absolute", right: -20, top: 10 + idx * 20 }}
+          className="flex items-center gap-1"
+        >
+          <Handle
+            type="source"
+            position={Position.Right}
+            id={`${output}-out`}
+            style={{
+              background: "#E5E7EB",
+              border: "1px solid #ccc",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+            }}
+          />
+          {getResourceIcon(output)}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const initialNodes: Node<CustomNodeData>[] = [
   {
     id: "solar",
-    type: "default",
+    type: "custom",
     position: { x: 100, y: 100 },
     data: {
       label: "☀️ Solar Panel\n(Energy Output: 20W)",
       type: "source",
       power: 20,
       compatibleWith: ["sink"],
+      inputs: [],
+      outputs: ["power"],
     },
     style: {
       borderRadius: 8,
@@ -57,7 +158,7 @@ const initialNodes: Node<CustomNodeData>[] = [
   },
   {
     id: "server",
-    type: "default",
+    type: "custom",
     position: { x: 400, y: 100 },
     data: {
       label: "🖥️ Server\n(Needs: 10W)",
@@ -65,6 +166,8 @@ const initialNodes: Node<CustomNodeData>[] = [
       demand: 10,
       powered: false,
       compatibleWith: ["source"],
+      inputs: ["power"],
+      outputs: [],
     },
     style: {
       borderRadius: 8,
@@ -76,6 +179,188 @@ const initialNodes: Node<CustomNodeData>[] = [
 ];
 
 const initialEdges: Edge[] = [];
+
+const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  });
+
+  return (
+    <>
+      <BaseEdge path={edgePath} id={id} />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: "absolute",
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            background: "white",
+            padding: "2px 6px",
+            borderRadius: "4px",
+            fontSize: 10,
+            border: "1px solid #ccc",
+          }}
+        >
+          {data?.label || "⚡ Power"}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
+const nodeTypes = {
+  custom: CustomNode,
+};
+
+type DeviceDefinition = {
+  name: string;
+  icon: string;
+  cost: number;
+  surface: number;
+  energyConsumption: number;
+  energyProduction: number;
+  waterUsage: number;
+  waterProduction: number;
+  chilledWaterUsage: number;
+  chilledWaterProduction: number;
+  distilledWaterUsage: number;
+  distilledWaterProduction: number;
+  internalNetworkUsage: number;
+  internalNetworkProduction: number;
+  externalNetworkProduction: number;
+  soundLevel: number;
+  procesProduction: number;
+  dataStorageProduction: number;
+  inputs: string[];
+  outputs: string[];
+  type: string;
+};
+
+const test = [
+  {
+    name: "Solar Panel",
+    icon: "Sun",
+    cost: 2000,
+    surface: 2,
+    energyConsumption: 20,
+    energyProduction: 20,
+    waterUsage: 0,
+    waterProduction: 0,
+    chilledWaterUsage: 0,
+    chilledWaterProduction: 0,
+    distilledWaterUsage: 0,
+    distilledWaterProduction: 0,
+    internalNetworkUsage: 2,
+    internalNetworkProduction: 2,
+    externalNetworkProduction: 0,
+    soundLevel: 0,
+    procesProduction: 0,
+    dataStorageProduction: 0,
+    inputs: ["chilledWater", "distilledWater"],
+    outputs: ["power"],
+    type: "source",
+  },
+]
+const devices: Record<string, DeviceDefinition[]> = {
+  source: [
+    {
+      name: "Solar Panel",
+      icon: "Sun",
+      cost: 2000,
+      surface: 2,
+      energyConsumption: 0,
+      energyProduction: 20,
+      waterUsage: 0,
+      waterProduction: 0,
+      chilledWaterUsage: 0,
+      chilledWaterProduction: 0,
+      distilledWaterUsage: 0,
+      distilledWaterProduction: 0,
+      internalNetworkUsage: 2,
+      internalNetworkProduction: 2,
+      externalNetworkProduction: 0,
+      soundLevel: 0,
+      procesProduction: 0,
+      dataStorageProduction: 0,
+      inputs: ["chilledWater", "distilledWater"],
+      outputs: ["power"],
+      type: "source",
+    },
+    {
+      name: "Water Pump",
+      icon: "Droplet",
+      cost: 1200,
+      surface: 3,
+      energyConsumption: 10,
+      energyProduction: 0,
+      waterUsage: 0,
+      waterProduction: 10,
+      chilledWaterUsage: 0,
+      chilledWaterProduction: 0,
+      distilledWaterUsage: 0,
+      distilledWaterProduction: 0,
+      internalNetworkUsage: 0,
+      internalNetworkProduction: 0,
+      externalNetworkProduction: 0,
+      soundLevel: 0,
+      procesProduction: 0,
+      dataStorageProduction: 0,
+      inputs: ["power"],
+      outputs: ["water"],
+      type: "source",
+    },
+  ],
+  sink: [
+    {
+      name: "Server",
+      icon: "Server",
+      cost: 1500,
+      surface: 4,
+      energyConsumption: 10,
+      energyProduction: 0,
+      waterUsage: 0,
+      waterProduction: 0,
+      chilledWaterUsage: 0,
+      chilledWaterProduction: 0,
+      distilledWaterUsage: 0,
+      distilledWaterProduction: 0,
+      internalNetworkUsage: 0,
+      internalNetworkProduction: 0,
+      externalNetworkProduction: 0,
+      soundLevel: 0,
+      procesProduction: 0,
+      dataStorageProduction: 0,
+      inputs: ["power"],
+      outputs: [],
+      type: "sink",
+    },
+    {
+      name: "Cooler",
+      icon: "Snowflake",
+      cost: 1000,
+      surface: 5,
+      energyConsumption: 5,
+      energyProduction: 0,
+      waterUsage: 2,
+      waterProduction: 0,
+      chilledWaterUsage: 0,
+      chilledWaterProduction: 0,
+      distilledWaterUsage: 0,
+      distilledWaterProduction: 0,
+      internalNetworkUsage: 0,
+      internalNetworkProduction: 0,
+      externalNetworkProduction: 0,
+      soundLevel: 0,
+      procesProduction: 0,
+      dataStorageProduction: 0,
+      inputs: ["power", "water"],
+      outputs: [],
+      type: "sink",
+    },
+  ],
+};
 
 function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -97,30 +382,6 @@ function FlowCanvas() {
   const [distilledWaterUsage, setDistilledWaterUsage] = useState(0);
   const [chilledWaterUsage, setChilledWaterUsage] = useState(0);
 
-  const devices = {
-    source: [
-      {
-        name: "Solar Panel",
-        icon: "Sun",
-        specs: ["Output: 20W", "Type: Renewable"],
-        cost: 2000,
-      },
-    ],
-    sink: [
-      {
-        name: "Server",
-        icon: "Server",
-        specs: ["Consumption: 10W", "Critical Load"],
-        cost: 1500,
-      },
-      {
-        name: "Cooler",
-        icon: "Snowflake",
-        specs: ["Consumption: 5W", "Thermal Control"],
-        cost: 1000,
-      },
-    ],
-  };
   const [search, setSearch] = useState("");
 
   const handleNodesChange = (changes: any) => {
@@ -133,6 +394,10 @@ function FlowCanvas() {
     onEdgesChange(changes);
   };
 
+  const edgeTypes: EdgeTypes = {
+    custom: CustomEdge,
+  };
+
   const onConnect = useCallback(
     (connection: Connection) => {
       const sourceNode = nodes.find((n) => n.id === connection.source);
@@ -141,7 +406,16 @@ function FlowCanvas() {
         sourceNode?.data?.compatibleWith?.includes(targetNode?.data?.type) &&
         targetNode?.data?.compatibleWith?.includes(sourceNode?.data?.type)
       ) {
-        setEdges((eds) => addEdge(connection, eds));
+        setEdges((eds) =>
+          addEdge(
+            {
+              ...connection,
+              type: "custom",
+              data: { label: "⚡ Power" },
+            },
+            eds
+          )
+        );
       } else {
         alert("These nodes are incompatible and cannot be connected.");
       }
@@ -191,13 +465,7 @@ function FlowCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const addNode = (device: {
-    name: string;
-    icon: string;
-    specs: string[];
-    cost: number;
-    type: string;
-  }) => {
+  const addNode = (device: DeviceDefinition) => {
     if (budget < device.cost) return;
 
     const id = `${device.name.toLowerCase().replace(" ", "-")}-${
@@ -205,16 +473,16 @@ function FlowCanvas() {
     }`;
     const newNode: Node<CustomNodeData> = {
       id,
-      type: "default",
+      type: "custom",
       position: { x: Math.random() * 600, y: Math.random() * 400 },
       data: {
-        label: `${
-          device.icon === "Sun" ? "☀️" : device.icon === "Server" ? "🖥️" : "❄️"
-        } ${device.name}\n($${device.cost})`,
+        label: `${device.name}\n($${device.cost})`,
         type: device.type,
-        power: device.type === "source" ? 20 : undefined,
-        demand: device.type === "sink" ? 10 : undefined,
+        power: device.outputs.includes("power") ? 20 : undefined,
+        demand: device.inputs.includes("power") ? 10 : undefined,
         compatibleWith: device.type === "source" ? ["sink"] : ["source"],
+        inputs: device.inputs,
+        outputs: device.outputs,
       },
       style: {
         borderRadius: 8,
@@ -313,6 +581,8 @@ function FlowCanvas() {
             onEdgesChange={handleEdgesChange}
             onConnect={onConnect}
             fitView
+            edgeTypes={edgeTypes}
+            nodeTypes={nodeTypes}
           >
             {/* <MiniMap /> */}
             {/* <Controls /> */}
@@ -357,7 +627,7 @@ function FlowCanvas() {
                           <Card
                             key={`${type}-${index}`}
                             className="hover:bg-muted cursor-pointer"
-                            onClick={() => addNode({ ...device, type })}
+                            onClick={() => addNode(device)}
                           >
                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                               <CardTitle className="text-sm font-medium">
@@ -369,9 +639,22 @@ function FlowCanvas() {
                             </CardHeader>
                             <CardContent>
                               <ul className="text-xs text-muted-foreground list-disc list-inside">
-                                {device.specs.map((s, i) => (
-                                  <li key={i}>{s}</li>
-                                ))}
+                                {Object.entries(device)
+                                  .filter(
+                                    ([key, val]) =>
+                                      typeof val === "number" &&
+                                      val !== 0 &&
+                                      key !== "cost" &&
+                                      key !== "surface"
+                                  )
+                                  .map(([key, val]) => (
+                                    <li key={key}>
+                                      {key
+                                        .replace(/([A-Z])/g, " $1")
+                                        .replace(/^./, (str) => str.toUpperCase())}
+                                      : {val}
+                                    </li>
+                                  ))}
                               </ul>
                             </CardContent>
                           </Card>
