@@ -189,6 +189,12 @@ const CustomNode = ({
         {data.demand && data.demand > 0 && (
           <div className="text-red-600">⚡ Consumes: {data.demand}W</div>
         )}
+        {data.freshWaterUsage && data.freshWaterUsage > 0 && (
+          <div className="text-blue-600">💧 Consumes: {data.freshWaterUsage}L Fresh Water</div>
+        )}
+        {data.freshWaterProduction && data.freshWaterProduction > 0 && (
+          <div className="text-cyan-600">💧 Produces: {data.freshWaterProduction}L Fresh Water</div>
+        )}
       </div>
 
       {/* Inputs */}
@@ -198,7 +204,9 @@ const CustomNode = ({
           style={{ position: "absolute", left: -24, top: 40 + idx * 20 }}
           className="flex items-center"
         >
-          <div className="mr-1">{getResourceIcon(input)}</div>
+          <div className="mr-1" title={input}>
+            {getResourceIcon(input)}
+          </div>
           <Handle
             type="target"
             position={Position.Left}
@@ -233,7 +241,9 @@ const CustomNode = ({
               borderRadius: "50%",
             }}
           />
-          <div className="ml-1">{getResourceIcon(output)}</div>
+          <div className="ml-1" title={output}>
+            {getResourceIcon(output)}
+          </div>
         </div>
       ))}
     </div>
@@ -618,8 +628,8 @@ function FlowCanvas() {
     setWaterUsage((w) => w + device.waterUsage);
     setChilledWaterUsage((c) => c + device.chilledWaterUsage);
     setDistilledWaterUsage((d) => d + device.distilledWaterUsage);
-    setFreshWaterUsage((f) => f + (device.waterUsage ?? 0));
-    setFreshWaterProduction((f) => f + (device.waterProduction ?? 0));
+    setFreshWaterUsage((f) => f + (device.freshWaterUsage ?? 0));
+    setFreshWaterProduction((f) => f + (device.freshWaterProduction ?? 0));
     setDistilledWaterProduction(
       (d) => d + (device.distilledWaterProduction ?? 0)
     );
@@ -760,7 +770,6 @@ function FlowCanvas() {
                   setPowerRequired(0);
                   setAccomulatePower(0);
                   setOccupiedSurface(0);
-                  setTotalSurface(0);
                   setWaterUsage(0);
                   setChilledWaterUsage(0);
                   setDistilledWaterUsage(0);
@@ -1029,25 +1038,25 @@ function FlowCanvas() {
                               <CardContent className="text-sm text-muted-foreground text-center px-2">
                                 {device.energyProduction > 0 && (
                                   <div>
-                                    Produces ⚡ {device.energyProduction}W
+                                    Produces ⚡ {device.energyProduction}MW
                                   </div>
                                 )}
                                 {device.energyConsumption > 0 && (
                                   <div>
-                                    Consumes ⚡ {device.energyConsumption}W
+                                    Consumes ⚡ {device.energyConsumption}MW
                                   </div>
                                 )}
                                 {device.waterProduction > 0 && (
                                   <div>
-                                    Produces 💧 {device.waterProduction}L
+                                    Produces 💧 {device.waterProduction}KL
                                   </div>
                                 )}
                                 {device.waterUsage > 0 && (
-                                  <div>Consumes 💧 {device.waterUsage}L</div>
+                                  <div>Consumes 💧 {device.waterUsage}KL</div>
                                 )}
                                 {device.dataStorageProduction > 0 && (
                                   <div>
-                                    Storage 🗄️ {device.dataStorageProduction}GB
+                                    Storage 🗄️ {device.dataStorageProduction}PT
                                   </div>
                                 )}
                                 {device.procesProduction > 0 && (
