@@ -5,6 +5,14 @@ import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
+import {
+  Sun,
+  Volume2,
+  Thermometer,
+  Droplets,
+  Wind,
+} from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const center = { lat: 41.6176, lng: 0.62 }; // Ejemplo: Lleida
 const mapContainerStyle = {
@@ -245,6 +253,53 @@ export default function SimulatorPage() {
                 </GoogleMap>
               </LoadScript>
             </div>
+          </div>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sun className="w-5 h-5 text-yellow-500" />
+                  Solar Irradiance
+                </CardTitle>
+                <CardDescription>5.4 kWh/m²/day (estimated average)</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Volume2 className="w-5 h-5 text-blue-500" />
+                  Ambient Noise Level
+                </CardTitle>
+                <CardDescription>42 dB (rural/suburban zone)</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Thermometer className="w-5 h-5 text-red-500" />
+                  Temperature
+                </CardTitle>
+                <CardDescription>22°C average</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Droplets className="w-5 h-5 text-cyan-500" />
+                  Humidity
+                </CardTitle>
+                <CardDescription>55%</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wind className="w-5 h-5 text-indigo-500" />
+                  Wind Availability
+                </CardTitle>
+                <CardDescription>Moderate (10 km/h average)</CardDescription>
+              </CardHeader>
+            </Card>
           </div>
         </TabsContent>
         <TabsContent value="settings" className="flex-1 overflow-auto">
