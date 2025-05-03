@@ -29,6 +29,7 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import {
   Eye,
   Hammer,
@@ -394,11 +395,63 @@ function FlowCanvas() {
     ]
   );
 
-  // Nueva conexión: validación por tipo de recurso
-  const onConnect = useCallback((connection: Connection) => {
-    const sourceHandle = connection.sourceHandle?.split("-")[0];
-    const targetHandle = connection.targetHandle?.split("-")[0];
-    if (sourceHandle === targetHandle) {
+  // Nueva conexión: validación por tipo de recurso y capacidad
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      const sourceHandle = connection.sourceHandle?.split("-")[0];
+      const targetHandle = connection.targetHandle?.split("-")[0];
+
+      if (!sourceNode || !targetNode) {
+        toast.error("Cannot connect: invalid nodes.");
+        return;
+      }
+
+      if (sourceHandle !== targetHandle) {
+        toast.error("Incompatible connection types");
+        return;
+      }
+
+      // Verificar si la fuente ya ha llegado a su capacidad de producción
+      const totalConnectionsFromSource = edges.filter(
+        (e) =>
+          e.source === sourceNode.id &&
+          e.sourceHandle?.split("-")[0] === sourceHandle
+      ).length;
+
+      const maxOutput = sourceNode.data?.outputs?.filter(
+        (o) => o === sourceHandle
+      ).length;
+
+      if (maxOutput !== undefined && totalConnectionsFromSource >= maxOutput) {
+        toast.error(
+          `Connection limit reached for ${sourceHandle} on ${sourceNode.id}`
+        );
+        return;
+      }
+
+      // Verificar si el target ya tiene ese input conectado
+      const targetInputsConnected = edges.filter(
+        (e) =>
+          e.target === targetNode.id &&
+          e.targetHandle?.split("-")[0] === targetHandle
+      ).length;
+
+      const targetExpectedInputs = targetNode.data?.inputs?.filter(
+        (i) => i === targetHandle
+      ).length;
+
+      if (
+        targetExpectedInputs !== undefined &&
+        targetInputsConnected >= targetExpectedInputs
+      ) {
+        toast.error(
+          `Input ${targetHandle} on ${targetNode.id} is already fully connected`
+        );
+        return;
+      }
+
       setEdges((eds) =>
         addEdge(
           {
@@ -409,10 +462,9 @@ function FlowCanvas() {
           eds
         )
       );
-    } else {
-      alert("Incompatible connection types");
-    }
-  }, []);
+    },
+    [nodes, edges]
+  );
 
   // Optimización: actualiza nodos solo si realmente cambian para evitar renders innecesarios
   useEffect(() => {
@@ -648,6 +700,17 @@ function FlowCanvas() {
     const state = { nodes, edges };
     setSaving(true);
     try {
+      // Validación previa al guardado
+      if (
+        freshWaterUsage > freshWaterProduction ||
+        distilledWaterUsage > distilledWaterProduction ||
+        chilledWaterUsage > chilledWaterProduction ||
+        internalNetworkUsage > internalNetworkProduction
+      ) {
+        toast.error("Cannot save: Resource usage exceeds production.");
+        setSaving(false);
+        return;
+      }
       console.log("Saving configuration:", state);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/workflow/${dataCenterId}`,
@@ -1001,11 +1064,14 @@ function FlowCanvas() {
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       {items
-                        .filter((device) =>
-                          device.name
-                            .toLowerCase()
-                            .includes(search.toLowerCase())
-                        )
+                        .filter((device) => {
+                          const query = search.toLowerCase();
+                          return (
+                            device.name.toLowerCase().includes(query) ||
+                            device.inputs?.some((i) => i.toLowerCase().includes(query)) ||
+                            device.outputs?.some((o) => o.toLowerCase().includes(query))
+                          );
+                        })
                         .map((device, index) => {
                           const LucideIcon =
                             LucideIcons[
@@ -1014,9 +1080,41 @@ function FlowCanvas() {
                           return (
                             <Card
                               key={`${type}-${index}`}
-                              className="hover:bg-muted cursor-pointer"
+                              className="hover:bg-muted cursor-pointer relative"
                               onClick={() => addNode(device)}
                             >
+                              {/* HoverCard with inputs/outputs info in the top-right corner */}
+                              <div className="absolute top-2 right-2 z-10">
+                                <HoverCard>
+                                  <HoverCardTrigger asChild>
+                                    <HelpCircle className="w-5 h-5 text-muted-foreground cursor-pointer" />
+                                  </HoverCardTrigger>
+                                  <HoverCardContent className="text-xs max-w-xs">
+                                    {device.inputs?.length > 0 && (
+                                      <div className="flex items-center gap-1 mb-1">
+                                        <strong className="w-12">Inputs:</strong>
+                                        {device.inputs.map((input, idx) => (
+                                          <div key={`input-icon-${idx}`} className="flex items-center gap-1" title={input}>
+                                            {getResourceIcon(input)}
+                                            <span className="text-xs capitalize">{input.replace(/_/g, " ")}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {device.outputs?.length > 0 && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <strong className="w-12">Outputs:</strong>
+                                        {device.outputs.map((output, idx) => (
+                                          <div key={`output-icon-${idx}`} className="flex items-center gap-1" title={output}>
+                                            {getResourceIcon(output)}
+                                            <span className="text-xs capitalize">{output.replace(/_/g, " ")}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </HoverCardContent>
+                                </HoverCard>
+                              </div>
                               <CardHeader className="items-center text-center pb-2 space-y-1">
                                 {LucideIcon && (
                                   <LucideIcon className="w-5 h-5 text-primary mx-auto" />
