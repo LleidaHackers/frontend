@@ -48,7 +48,7 @@ const formSchema = z.object({
   country: z.string().min(1, {
     message: "Country is required",
   }),
-  budget: z.number({
+  totalBudget: z.number({
     invalid_type_error: "Budget is required",
   }),
   space_x: z.number({
@@ -89,7 +89,7 @@ const createDataCenter = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/create-data-center`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center`,
         {
           method: "POST",
           headers: {
@@ -206,7 +206,7 @@ const createDataCenter = () => {
                   <div className="md:flex w-full gap-x-5 pt-2">
                     <FormField
                       control={form.control}
-                      name="budget"
+                      name="totalBudget"
                       render={({ field }) => (
                         <FormItem className="md:w-1/3 py-2">
                           <FormLabel className="text-base font-semibold">

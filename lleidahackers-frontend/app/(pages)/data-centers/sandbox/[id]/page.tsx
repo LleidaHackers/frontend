@@ -294,8 +294,8 @@ function FlowCanvas() {
     {}
   );
   // Specs
-  const [budget, setBudget] = useState(50000);
-  const [totalBudget, setTotalBudget] = useState(50000);
+  const [budget, setBudget] = useState(0);
+  const [totalBudget, setTotalBudget] = useState(0);
   const [powerConsume, setConsumeUsage] = useState(0);
   const [powerRequired, setPowerRequired] = useState(0);
   const [accomulatePower, setAccomulatePower] = useState(0);
@@ -512,7 +512,7 @@ function FlowCanvas() {
           );
           const json = await res.json();
           console.log("Data center stats:", json);
-          setTotalBudget(json.budget ?? 0);
+          setTotalBudget(json.totalBudget ?? 0);
           setBudget(json.budget ?? 0);
           setTotalSurface(json.totalSurface ?? 0);
           setOccupiedSurface(json.occupedSurface ?? 0);
@@ -725,8 +725,8 @@ function FlowCanvas() {
                   setNodes([]);
                   setEdges([]);
                   setHistory([]);
-                  setBudget(50000);
-                  setTotalBudget(50000);
+                  setBudget(0);
+                  setTotalBudget(0);
                   setConsumeUsage(0);
                   setPowerRequired(0);
                   setAccomulatePower(0);

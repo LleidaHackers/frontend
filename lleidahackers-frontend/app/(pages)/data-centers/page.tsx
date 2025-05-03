@@ -20,7 +20,7 @@ export default function DataCentersPage() {
     const fetchDataCenters = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/data-center`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center`
         );
         const data = await response.json();
         console.log("Data centers:", data);
@@ -36,7 +36,7 @@ export default function DataCentersPage() {
     if (confirm("Are you sure you want to delete this data center?")) {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/delete-data-center/${id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center/${id}`,
           {
             method: "DELETE",
           }
@@ -142,7 +142,7 @@ export default function DataCentersPage() {
               {/*if data center is disconetec inable the button to monitor */}
               <Button
                 onClick={() =>
-                  router.push(`/data-center/monitor/${center._id?.$oid}`)
+                  router.push(`/data-centers/monitor/${center._id?.$oid}`)
                 }
                 disabled={center.status === "Inactive"}
                 variant="outline"
