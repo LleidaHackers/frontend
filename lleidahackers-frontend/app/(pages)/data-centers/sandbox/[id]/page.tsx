@@ -46,6 +46,7 @@ import {
   Cpu,
   Database,
   Lightbulb,
+  HelpCircle,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import "reactflow/dist/style.css";
@@ -89,12 +90,23 @@ const getResourceIcon = (type: string) => {
 
 const CustomNode = ({ data }: { data: CustomNodeData }) => {
   return (
-    <div className="relative bg-white rounded-md border border-gray-300 p-2 text-sm shadow-sm min-w-[120px]">
-      <div className="font-medium mb-1 whitespace-pre-line">{data.label}</div>
+    <div
+      className="relative rounded-md border p-3 text-sm shadow-md min-w-[140px]"
+      style={{
+        backgroundColor: data?.style?.backgroundColor ?? "#FFF",
+        border: "1px solid #CBD5E1",
+      }}
+    >
+      <div className="font-semibold text-center whitespace-pre-line">
+        {data.label}
+      </div>
+      <div className="text-xs text-muted-foreground text-center mb-2">
+        {data.type}
+      </div>
       {data.inputs?.map((input, idx) => (
         <div
           key={`input-${input}`}
-          style={{ position: "absolute", left: -20, top: 10 + idx * 20 }}
+          style={{ position: "absolute", left: -20, top: 30 + idx * 20 }}
           className="flex items-center"
         >
           {getResourceIcon(input)}
@@ -115,7 +127,7 @@ const CustomNode = ({ data }: { data: CustomNodeData }) => {
       {data.outputs?.map((output, idx) => (
         <div
           key={`output-${output}`}
-          style={{ position: "absolute", right: -20, top: 10 + idx * 20 }}
+          style={{ position: "absolute", right: -20, top: 30 + idx * 20 }}
           className="flex items-center gap-1"
         >
           <Handle
@@ -265,15 +277,18 @@ const test = [
   },
 ];
 
-
 function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
+  const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>(
+    []
+  );
   const [showSidebar, setShowSidebar] = useState(true);
   const [showSpecs, setShowSpecs] = useState(false);
   // Agrupado por tipo
-  const [devices, setDevices] = useState<Record<string, DeviceDefinition[]>>({});
+  const [devices, setDevices] = useState<Record<string, DeviceDefinition[]>>(
+    {}
+  );
   // Specs
   const [budget, setBudget] = useState(50000);
   const [totalBudget, setTotalBudget] = useState(50000);
@@ -303,27 +318,24 @@ function FlowCanvas() {
   };
 
   // Nueva conexión: validación por tipo de recurso
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      const sourceHandle = connection.sourceHandle?.split("-")[0];
-      const targetHandle = connection.targetHandle?.split("-")[0];
-      if (sourceHandle === targetHandle) {
-        setEdges((eds) =>
-          addEdge(
-            {
-              ...connection,
-              type: "custom",
-              data: { label: sourceHandle },
-            },
-            eds
-          )
-        );
-      } else {
-        alert("Incompatible connection types");
-      }
-    },
-    []
-  );
+  const onConnect = useCallback((connection: Connection) => {
+    const sourceHandle = connection.sourceHandle?.split("-")[0];
+    const targetHandle = connection.targetHandle?.split("-")[0];
+    if (sourceHandle === targetHandle) {
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...connection,
+            type: "custom",
+            data: { label: sourceHandle },
+          },
+          eds
+        )
+      );
+    } else {
+      alert("Incompatible connection types");
+    }
+  }, []);
 
   // No cambiamos la lógica de powered sinks, pero podrías adaptarla a nuevos tipos si lo deseas.
   useEffect(() => {
@@ -347,7 +359,33 @@ function FlowCanvas() {
       return n;
     });
 
-    setNodes(sinks);
+    // --- Color dynamic logic for fully connected inputs ---
+    const updatedNodes = sinks.map((node) => {
+      const requiredInputs = node.data.inputs?.length || 0;
+      const connectedInputs = edges.filter(
+        (e) =>
+          e.target === node.id &&
+          node.data.inputs?.includes(e.targetHandle?.split("-")[0] || "")
+      ).length;
+
+      const isFullyConnected = connectedInputs >= requiredInputs;
+      const baseStyle = node.style || {};
+
+      return {
+        ...node,
+        style: {
+          ...baseStyle,
+          backgroundColor:
+            requiredInputs === 0
+              ? "#FFFFFF"
+              : isFullyConnected
+              ? "#D1FAE5"
+              : "#E5E7EB",
+        },
+      };
+    });
+
+    setNodes(updatedNodes);
   }, [edges]);
 
   useEffect(() => {
@@ -374,17 +412,14 @@ function FlowCanvas() {
 
   const addNode = (device: DeviceDefinition) => {
     if (budget < device.cost) {
-      toast.error(
-        "Insufficient budget",
-        {
-          description: `You need $${device.cost} to add this device.`,
-          duration: 3000,
-          action: {
-            label: "OK",
-            onClick: () => toast.dismiss(),
-          },
-        }
-      );
+      toast.error("Insufficient budget", {
+        description: `You need $${device.cost} to add this device.`,
+        duration: 3000,
+        action: {
+          label: "OK",
+          onClick: () => toast.dismiss(),
+        },
+      });
 
       return;
       return;
@@ -619,14 +654,19 @@ function FlowCanvas() {
                                   {LucideIcon ? (
                                     <LucideIcon className="w-4 h-4 text-muted-foreground" />
                                   ) : (
-                                    <i data-lucide={device.icon}></i>
+                                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
                                   )}
                                 </span>
                               </CardHeader>
                               <CardContent>
                                 <ul className="text-xs text-muted-foreground list-disc list-inside">
-                                  <li><strong>Cost:</strong> ${device.cost}</li>
-                                  <li><strong>Surface:</strong> {device.surface} m²</li>
+                                  <li>
+                                    <strong>Cost:</strong> ${device.cost}
+                                  </li>
+                                  <li>
+                                    <strong>Surface:</strong> {device.surface}{" "}
+                                    m²
+                                  </li>
                                   {Object.entries(device)
                                     .filter(
                                       ([key, val]) =>
