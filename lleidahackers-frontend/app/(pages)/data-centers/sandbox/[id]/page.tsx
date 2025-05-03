@@ -299,6 +299,16 @@ function FlowCanvas() {
   const [waterUsage, setWaterUsage] = useState(0);
   const [distilledWaterUsage, setDistilledWaterUsage] = useState(0);
   const [chilledWaterUsage, setChilledWaterUsage] = useState(0);
+  // New module metrics
+  const [freshWaterUsage, setFreshWaterUsage] = useState(0);
+  const [freshWaterProduction, setFreshWaterProduction] = useState(0);
+  const [distilledWaterProduction, setDistilledWaterProduction] = useState(0);
+  const [chilledWaterProduction, setChilledWaterProduction] = useState(0);
+  const [internalNetworkUsage, setInternalNetworkUsage] = useState(0);
+  const [internalNetworkProduction, setInternalNetworkProduction] = useState(0);
+  const [externalNetworkProduction, setExternalNetworkProduction] = useState(0);
+  const [procesProduction, setProcesProduction] = useState(0);
+  const [dataStorageProduction, setDataStorageProduction] = useState(0);
 
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -557,6 +567,15 @@ function FlowCanvas() {
     setWaterUsage((w) => w + device.waterUsage);
     setChilledWaterUsage((c) => c + device.chilledWaterUsage);
     setDistilledWaterUsage((d) => d + device.distilledWaterUsage);
+    setFreshWaterUsage((f) => f + (device.freshWaterUsage ?? 0));
+    setFreshWaterProduction((f) => f + (device.freshWaterProduction ?? 0));
+    setDistilledWaterProduction((d) => d + (device.distilledWaterProduction ?? 0));
+    setChilledWaterProduction((c) => c + (device.chilledWaterProduction ?? 0));
+    setInternalNetworkUsage((n) => n + (device.internalNetworkUsage ?? 0));
+    setInternalNetworkProduction((n) => n + (device.internalNetworkProduction ?? 0));
+    setExternalNetworkProduction((e) => e + (device.externalNetworkProduction ?? 0));
+    setProcesProduction((p) => p + (device.procesProduction ?? 0));
+    setDataStorageProduction((d) => d + (device.dataStorageProduction ?? 0));
   };
 
   const handleSave = async () => {
@@ -663,6 +682,15 @@ function FlowCanvas() {
                   setEdges([]);
                   setHistory([]);
                   setBudget(50000);
+                  setTotalBudget(50000);
+                  setConsumeUsage(0);
+                  setPowerRequired(0);
+                  setAccomulatePower(0);
+                  setOccupiedSurface(0);
+                  setTotalSurface(0);
+                  setWaterUsage(0);
+                  setChilledWaterUsage(0);
+                  setDistilledWaterUsage(0);
                 }}
               >
                 <RotateCcw className="w-4 h-4" />
@@ -714,6 +742,17 @@ function FlowCanvas() {
             waterUsage={waterUsage}
             distilledWaterUsage={distilledWaterUsage}
             chilledWaterUsage={chilledWaterUsage}
+            soundLevel={0}
+            waterProduction={0}
+            chilledWaterProduction={chilledWaterProduction}
+            freshWaterUsage={freshWaterUsage}
+            freshWaterProduction={freshWaterProduction}
+            distilledWaterProduction={distilledWaterProduction}
+            internalNetworkUsage={internalNetworkUsage}
+            internalNetworkProduction={internalNetworkProduction}
+            externalNetworkProduction={externalNetworkProduction}
+            procesProduction={procesProduction}
+            dataStorageProduction={dataStorageProduction}
           />
         )}
       </Card>

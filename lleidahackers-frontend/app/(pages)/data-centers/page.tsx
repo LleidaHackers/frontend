@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-
+import { toast } from "sonner";
 export default function DataCentersPage() {
   const router = useRouter();
   const [dataCenters, setDataCenters] = useState<any[]>([]);
@@ -19,7 +19,9 @@ export default function DataCentersPage() {
   useEffect(() => {
     const fetchDataCenters = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/data-center`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/data-center`
+        );
         const data = await response.json();
         console.log("Data centers:", data);
         setDataCenters(data);
@@ -30,6 +32,27 @@ export default function DataCentersPage() {
 
     fetchDataCenters();
   }, []);
+  const handleDelete = (id: string) => async () => {
+    if (confirm("Are you sure you want to delete this data center?")) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/delete-data-center/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (response.ok) {
+          setDataCenters((prev) => prev.filter((center) => center._id !== id));
+          toast.success("Data center deleted successfully");
+          router.refresh();
+        } else {
+          console.error("Error deleting data center:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error deleting data center:", error);
+      }
+    }
+  };
 
   return (
     <div className="p-8">
@@ -55,9 +78,21 @@ export default function DataCentersPage() {
         {dataCenters.map((center) => (
           <Card
             key={center._id ?? center.id}
-            className="shadow-md p-4 flex "
+            className="shadow-md p-4 flex relative"
             // onClick={() => router.push(`/data-centers/sandbox/${center.id}`)}
           >
+            <div className="absolute top-2 right-2">
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={async () => {
+                  await handleDelete(center._id?.$oid)();
+                  router.refresh();
+                }}
+              >
+                🗑
+              </Button>
+            </div>
             <div className="flex items-center justify-center">
               <HousePlug className="w-16 h-16 text-primary" />
             </div>
@@ -91,7 +126,9 @@ export default function DataCentersPage() {
             </div>
             <CardFooter className="flex justify-center mt-4 gap-x-4">
               <Button
-                onClick={() => router.push(`/data-centers/sandbox/${center._id?.$oid}`)}
+                onClick={() =>
+                  router.push(`/data-centers/sandbox/${center._id?.$oid}`)
+                }
               >
                 Sandbox
               </Button>

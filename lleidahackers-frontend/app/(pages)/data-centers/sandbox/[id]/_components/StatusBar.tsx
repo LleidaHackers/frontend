@@ -5,7 +5,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Zap, Server, Layers, Droplet, Snowflake } from "lucide-react";
+import {
+  DollarSign,
+  Zap,
+  Server,
+  Layers,
+  Droplet,
+  Snowflake,
+} from "lucide-react";
 
 export default function StatusBar({
   budget,
@@ -18,6 +25,17 @@ export default function StatusBar({
   waterUsage,
   distilledWaterUsage,
   chilledWaterUsage,
+  soundLevel,
+  waterProduction,
+  chilledWaterProduction,
+  freshWaterUsage,
+  freshWaterProduction,
+  distilledWaterProduction,
+  internalNetworkUsage,
+  internalNetworkProduction,
+  externalNetworkProduction,
+  procesProduction,
+  dataStorageProduction,
 }: {
   budget: number;
   totalBudget: number;
@@ -29,6 +47,17 @@ export default function StatusBar({
   waterUsage: number;
   distilledWaterUsage: number;
   chilledWaterUsage: number;
+  soundLevel: number;
+  waterProduction: number;
+  chilledWaterProduction: number;
+  freshWaterUsage: number;
+  freshWaterProduction: number;
+  distilledWaterProduction: number;
+  internalNetworkUsage: number;
+  internalNetworkProduction: number;
+  externalNetworkProduction: number;
+  procesProduction: number;
+  dataStorageProduction: number;
 }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 px-4 py-2">
@@ -46,35 +75,13 @@ export default function StatusBar({
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Zap className="w-4 h-4" /> Power Used
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>⚡ Power Stats</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{powerConsume} W</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Zap className="w-4 h-4" /> Power Required
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{powerRequired} W</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Zap className="w-4 h-4" /> Power Accumulated
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{accomulatePower} W</p>
+        <CardContent className="text-sm space-y-1">
+          <div>Used: {powerConsume} W</div>
+          <div>Required: {powerRequired} W</div>
+          <div>Accumulated: {accomulatePower} W</div>
         </CardContent>
       </Card>
 
@@ -85,42 +92,76 @@ export default function StatusBar({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-lg font-semibold">{occupedSurface} / {totalSurface} m²</p>
+          <p className="text-lg font-semibold">
+            {occupedSurface} / {totalSurface} m²
+          </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Droplet className="w-4 h-4" /> Water Usage
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>💧 Water Stats</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{waterUsage} L</p>
+        <CardContent className="text-sm space-y-1">
+          <div>Water Usage: {waterUsage} L</div>
+          <div>
+            Fresh:{" "}
+            <span className={freshWaterProduction >= freshWaterUsage ? "text-green-600" : "text-red-600"}>
+              {freshWaterUsage}L
+            </span>{" "}
+            / {freshWaterProduction}L
+          </div>
+          <div>
+            Distilled:{" "}
+            <span className={distilledWaterProduction >= distilledWaterUsage ? "text-green-600" : "text-red-600"}>
+              {distilledWaterUsage}L
+            </span>{" "}
+            / {distilledWaterProduction}L
+          </div>
+          <div>
+            Chilled:{" "}
+            <span className={chilledWaterProduction >= chilledWaterUsage ? "text-green-600" : "text-red-600"}>
+              {chilledWaterUsage}L
+            </span>{" "}
+            / {chilledWaterProduction}L
+          </div>
         </CardContent>
       </Card>
-
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Droplet className="w-4 h-4" /> Distilled Water
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>Internal Network</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{distilledWaterUsage} L</p>
+        <CardContent className="text-sm">
+          <div className={internalNetworkProduction >= internalNetworkUsage ? "text-green-600" : "text-red-600"}>
+            Usage: {internalNetworkUsage}
+          </div>
+          <div>Production: {internalNetworkProduction}</div>
         </CardContent>
       </Card>
-
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Snowflake className="w-4 h-4" /> Chilled Water
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>External Network Production</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{chilledWaterUsage} L</p>
-        </CardContent>
+        <CardContent>{externalNetworkProduction}</CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Process Production</CardTitle>
+        </CardHeader>
+        <CardContent>{procesProduction}</CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Storage Production</CardTitle>
+        </CardHeader>
+        <CardContent>{dataStorageProduction} GB</CardContent>
+      </Card>
+      {/* <Card>
+        <CardHeader>
+          <CardTitle>Sound Level</CardTitle>
+        </CardHeader>
+        <CardContent>{soundLevel} dB</CardContent>
+      </Card> */}
     </div>
   );
 }
