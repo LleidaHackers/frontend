@@ -120,7 +120,7 @@ export default function DataCentersPage() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   ⚡ Energy Production:{" "}
-                  {center.energyPriduction?.toLocaleString?.() ?? "N/A"} kW
+                  {center.energyProduction?.toLocaleString?.() ?? "N/A"} kW
                 </p>
               </CardContent>
             </div>

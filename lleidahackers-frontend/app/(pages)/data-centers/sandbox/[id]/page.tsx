@@ -132,12 +132,21 @@ const CustomNode = ({
         onClick={(e) => {
           e.stopPropagation();
           setNodes((nds) => nds.filter((n) => n.id !== id));
-          setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+          setEdges((eds) =>
+            eds.filter((e) => e.source !== id && e.target !== id)
+          );
 
-          setBudget((b) => b + (data.label?.match(/\(\$(\d+)\)/)?.[1] ? parseInt(data.label.match(/\(\$(\d+)\)/)?.[1] ?? "0", 10) : 0));
+          setBudget(
+            (b) =>
+              b +
+              (data.label?.match(/\(\$(\d+)\)/)?.[1]
+                ? parseInt(data.label.match(/\(\$(\d+)\)/)?.[1] ?? "0", 10)
+                : 0)
+          );
           // Extract surface from data or from label using regex
           const surfaceMatch = data.label?.match(/\(.*?(\d+)\s?m².*?\)/);
-          const surface = data.surface ?? (surfaceMatch ? parseInt(surfaceMatch[1], 10) : 0);
+          const surface =
+            data.surface ?? (surfaceMatch ? parseInt(surfaceMatch[1], 10) : 0);
           setOccupiedSurface((s) => s - surface);
           setConsumeUsage((c) => c - (data.demand ?? 0));
           setAccomulatePower((p) => p - (data.power ?? 0));
@@ -212,9 +221,7 @@ const CustomNode = ({
   );
 };
 
-const initialNodes: Node<CustomNodeData>[] = [
-
-];
+const initialNodes: Node<CustomNodeData>[] = [];
 
 const initialEdges: Edge[] = [];
 
@@ -271,8 +278,6 @@ type DeviceDefinition = {
   outputs: string[];
   type: string;
 };
-
-
 
 function FlowCanvas() {
   const params = useParams();
@@ -348,7 +353,17 @@ function FlowCanvas() {
         />
       ),
     }),
-    [setNodes, setEdges, setBudget, setOccupiedSurface, setConsumeUsage, setAccomulatePower, setWaterUsage, setChilledWaterUsage, setDistilledWaterUsage]
+    [
+      setNodes,
+      setEdges,
+      setBudget,
+      setOccupiedSurface,
+      setConsumeUsage,
+      setAccomulatePower,
+      setWaterUsage,
+      setChilledWaterUsage,
+      setDistilledWaterUsage,
+    ]
   );
 
   // Nueva conexión: validación por tipo de recurso
@@ -499,7 +514,7 @@ function FlowCanvas() {
           console.log("Data center stats:", json);
           setTotalBudget(json.budget ?? 0);
           setBudget(json.budget ?? 0);
-          setTotalSurface((json.space_x ?? 0) * (json.space_y ?? 0));
+          setTotalSurface(json.totalSurface ?? 0);
           setOccupiedSurface(json.occupedSurface ?? 0);
           setConsumeUsage(json.powerConsume ?? 0);
           setPowerRequired(json.powerRequired ?? 0);
@@ -507,6 +522,15 @@ function FlowCanvas() {
           setWaterUsage(json.waterUsage ?? 0);
           setChilledWaterUsage(json.chilledWaterUsage ?? 0);
           setDistilledWaterUsage(json.distilledWaterUsage ?? 0);
+          setFreshWaterUsage(json.freshWaterUsage ?? 0);
+          setFreshWaterProduction(json.freshWaterProduction ?? 0);
+          setDistilledWaterProduction(json.distilledWaterProduction ?? 0);
+          setChilledWaterProduction(json.chilledWaterProduction ?? 0);
+          setInternalNetworkUsage(json.internalNetworkUsage ?? 0);
+          setInternalNetworkProduction(json.internalNetworkProduction ?? 0);
+          setExternalNetworkProduction(json.externalNetworkProduction ?? 0);
+          setProcesProduction(json.procesProduction ?? 0);
+          setDataStorageProduction(json.dataStorageProduction ?? 0);
         } catch (err) {
           console.error("Error loading data center stats", err);
         }
@@ -569,11 +593,17 @@ function FlowCanvas() {
     setDistilledWaterUsage((d) => d + device.distilledWaterUsage);
     setFreshWaterUsage((f) => f + (device.freshWaterUsage ?? 0));
     setFreshWaterProduction((f) => f + (device.freshWaterProduction ?? 0));
-    setDistilledWaterProduction((d) => d + (device.distilledWaterProduction ?? 0));
+    setDistilledWaterProduction(
+      (d) => d + (device.distilledWaterProduction ?? 0)
+    );
     setChilledWaterProduction((c) => c + (device.chilledWaterProduction ?? 0));
     setInternalNetworkUsage((n) => n + (device.internalNetworkUsage ?? 0));
-    setInternalNetworkProduction((n) => n + (device.internalNetworkProduction ?? 0));
-    setExternalNetworkProduction((e) => e + (device.externalNetworkProduction ?? 0));
+    setInternalNetworkProduction(
+      (n) => n + (device.internalNetworkProduction ?? 0)
+    );
+    setExternalNetworkProduction(
+      (e) => e + (device.externalNetworkProduction ?? 0)
+    );
     setProcesProduction((p) => p + (device.procesProduction ?? 0));
     setDataStorageProduction((d) => d + (device.dataStorageProduction ?? 0));
   };
@@ -593,24 +623,38 @@ function FlowCanvas() {
           body: JSON.stringify(state),
         }
       );
-      // POST a /save-data-center/{id} con las estadísticas actuales
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save-data-center/${dataCenterId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          budget,
-          powerConsume,
-          powerRequired,
-          accomulatePower,
-          occupedSurface,
-          totalSurface,
-          waterUsage,
-          distilledWaterUsage,
-          chilledWaterUsage,
-        }),
-      });
+      // POST a /save-data-center/{id} con todas las estadísticas relevantes
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save-data-center/${dataCenterId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            budget,
+            powerConsume,
+            powerRequired,
+            accomulatePower,
+            occupedSurface,
+            totalSurface,
+            waterUsage,
+            distilledWaterUsage,
+            chilledWaterUsage,
+            waterProduction: 0,
+            freshWaterUsage,
+            freshWaterProduction,
+            distilledWaterProduction,
+            chilledWaterProduction,
+            internalNetworkUsage,
+            internalNetworkProduction,
+            externalNetworkProduction,
+            soundLevel: 0,
+            procesProduction,
+            dataStorageProduction,
+          }),
+        }
+      );
       if (response.ok) {
         toast.success("Configuration saved successfully");
       } else {
@@ -821,30 +865,48 @@ function FlowCanvas() {
                               onClick={() => addNode(device)}
                             >
                               <CardHeader className="items-center text-center pb-2 space-y-1">
-                                {LucideIcon && <LucideIcon className="w-5 h-5 text-primary mx-auto" />}
+                                {LucideIcon && (
+                                  <LucideIcon className="w-5 h-5 text-primary mx-auto" />
+                                )}
                                 <CardTitle className="text-base font-bold">
-                                  {device.name.replace(new RegExp(`^${type}_?`, "i"), "")}
+                                  {device.name.replace(
+                                    new RegExp(`^${type}_?`, "i"),
+                                    ""
+                                  )}
                                 </CardTitle>
-                                <div className="text-sm text-muted-foreground">${device.cost}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  ${device.cost}
+                                </div>
                               </CardHeader>
                               <CardContent className="text-xs text-muted-foreground text-center px-2">
                                 {device.energyProduction > 0 && (
-                                  <div>Produces ⚡ {device.energyProduction}W</div>
+                                  <div>
+                                    Produces ⚡ {device.energyProduction}W
+                                  </div>
                                 )}
                                 {device.energyConsumption > 0 && (
-                                  <div>Consumes ⚡ {device.energyConsumption}W</div>
+                                  <div>
+                                    Consumes ⚡ {device.energyConsumption}W
+                                  </div>
                                 )}
                                 {device.waterProduction > 0 && (
-                                  <div>Produces 💧 {device.waterProduction}L</div>
+                                  <div>
+                                    Produces 💧 {device.waterProduction}L
+                                  </div>
                                 )}
                                 {device.waterUsage > 0 && (
                                   <div>Consumes 💧 {device.waterUsage}L</div>
                                 )}
                                 {device.dataStorageProduction > 0 && (
-                                  <div>Storage 🗄️ {device.dataStorageProduction}GB</div>
+                                  <div>
+                                    Storage 🗄️ {device.dataStorageProduction}GB
+                                  </div>
                                 )}
                                 {device.procesProduction > 0 && (
-                                  <div>Processing 🧠 {device.procesProduction} Units</div>
+                                  <div>
+                                    Processing 🧠 {device.procesProduction}{" "}
+                                    Units
+                                  </div>
                                 )}
                               </CardContent>
                             </Card>

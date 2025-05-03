@@ -79,8 +79,18 @@ export default function StatusBar({
           <CardTitle>⚡ Power Stats</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-1">
-          <div>Used: {powerConsume} W</div>
-          <div>Required: {powerRequired} W</div>
+          <div>
+            Used:{" "}
+            <span className={accomulatePower >= powerConsume ? "text-green-600" : "text-red-600"}>
+              {powerConsume} W
+            </span>
+          </div>
+          <div>
+            Required:{" "}
+            <span className={accomulatePower >= powerRequired ? "text-green-600" : "text-red-600"}>
+              {powerRequired} W
+            </span>
+          </div>
           <div>Accumulated: {accomulatePower} W</div>
         </CardContent>
       </Card>
