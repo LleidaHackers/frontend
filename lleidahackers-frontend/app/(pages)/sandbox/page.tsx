@@ -29,7 +29,15 @@ import StatusBar from "./_components/StatusBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 
-const initialNodes: Node[] = [
+type CustomNodeData = {
+  label: string;
+  type: string;
+  power?: number;
+  demand?: number;
+  compatibleWith?: string[];
+};
+
+const initialNodes: Node<CustomNodeData>[] = [
   {
     id: "solar",
     type: "default",
@@ -38,6 +46,13 @@ const initialNodes: Node[] = [
       label: "☀️ Solar Panel\n(Energy Output: 20W)",
       type: "source",
       power: 20,
+      compatibleWith: ["sink"],
+    },
+    style: {
+      borderRadius: 8,
+      padding: 8,
+      backgroundColor: "#ECFDF5",
+      border: "1px solid #CBD5E1",
     },
   },
   {
@@ -49,6 +64,13 @@ const initialNodes: Node[] = [
       type: "sink",
       demand: 10,
       powered: false,
+      compatibleWith: ["source"],
+    },
+    style: {
+      borderRadius: 8,
+      padding: 8,
+      backgroundColor: "#EEF2FF",
+      border: "1px solid #CBD5E1",
     },
   },
 ];
@@ -112,8 +134,19 @@ function FlowCanvas() {
   };
 
   const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    []
+    (connection: Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      if (
+        sourceNode?.data?.compatibleWith?.includes(targetNode?.data?.type) &&
+        targetNode?.data?.compatibleWith?.includes(sourceNode?.data?.type)
+      ) {
+        setEdges((eds) => addEdge(connection, eds));
+      } else {
+        alert("These nodes are incompatible and cannot be connected.");
+      }
+    },
+    [nodes]
   );
 
   useEffect(() => {
@@ -170,7 +203,7 @@ function FlowCanvas() {
     const id = `${device.name.toLowerCase().replace(" ", "-")}-${
       nodes.length + 1
     }`;
-    const newNode: Node = {
+    const newNode: Node<CustomNodeData> = {
       id,
       type: "default",
       position: { x: Math.random() * 600, y: Math.random() * 400 },
@@ -181,6 +214,13 @@ function FlowCanvas() {
         type: device.type,
         power: device.type === "source" ? 20 : undefined,
         demand: device.type === "sink" ? 10 : undefined,
+        compatibleWith: device.type === "source" ? ["sink"] : ["source"],
+      },
+      style: {
+        borderRadius: 8,
+        padding: 8,
+        backgroundColor: device.type === "source" ? "#ECFDF5" : "#EEF2FF",
+        border: "1px solid #CBD5E1",
       },
     };
     setNodes((nds) => [...nds, newNode]);
