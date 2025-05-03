@@ -29,7 +29,11 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 import {
   Eye,
   Hammer,
@@ -187,10 +191,14 @@ const CustomNode = ({
           <div className="text-green-600">⚡ Produces: {data.power}W</div>
         )}
         {data.freshWaterUsage && data.freshWaterUsage > 0 && (
-          <div className="text-blue-600">💧 Consumes: {data.freshWaterUsage}L Fresh Water</div>
+          <div className="text-blue-600">
+            💧 Consumes: {data.freshWaterUsage}L Fresh Water
+          </div>
         )}
         {data.freshWaterProduction && data.freshWaterProduction > 0 && (
-          <div className="text-cyan-600">💧 Produces: {data.freshWaterProduction}L Fresh Water</div>
+          <div className="text-cyan-600">
+            💧 Produces: {data.freshWaterProduction}L Fresh Water
+          </div>
         )}
       </div>
       {/* Inputs */}
@@ -412,23 +420,6 @@ function FlowCanvas() {
         return;
       }
 
-      // Verificar si la fuente ya ha llegado a su capacidad de producción
-      const totalConnectionsFromSource = edges.filter(
-        (e) =>
-          e.source === sourceNode.id &&
-          e.sourceHandle?.split("-")[0] === sourceHandle
-      ).length;
-
-      const maxOutput = sourceNode.data?.outputs?.filter(
-        (o) => o === sourceHandle
-      ).length;
-
-      if (maxOutput !== undefined && totalConnectionsFromSource >= maxOutput) {
-        toast.error(
-          `Connection limit reached for ${sourceHandle} on ${sourceNode.id}`
-        );
-        return;
-      }
 
       // Verificar si el target ya tiene ese input conectado
       const targetInputsConnected = edges.filter(
@@ -1067,8 +1058,12 @@ function FlowCanvas() {
                           const query = search.toLowerCase();
                           return (
                             device.name.toLowerCase().includes(query) ||
-                            device.inputs?.some((i) => i.toLowerCase().includes(query)) ||
-                            device.outputs?.some((o) => o.toLowerCase().includes(query))
+                            device.inputs?.some((i) =>
+                              i.toLowerCase().includes(query)
+                            ) ||
+                            device.outputs?.some((o) =>
+                              o.toLowerCase().includes(query)
+                            )
                           );
                         })
                         .map((device, index) => {
@@ -1091,22 +1086,38 @@ function FlowCanvas() {
                                   <HoverCardContent className="text-xs max-w-xs">
                                     {device.inputs?.length > 0 && (
                                       <div className="flex items-center gap-1 mb-1">
-                                        <strong className="w-12">Inputs:</strong>
+                                        <strong className="w-12">
+                                          Inputs:
+                                        </strong>
                                         {device.inputs.map((input, idx) => (
-                                          <div key={`input-icon-${idx}`} className="flex items-center gap-1" title={input}>
+                                          <div
+                                            key={`input-icon-${idx}`}
+                                            className="flex items-center gap-1"
+                                            title={input}
+                                          >
                                             {getResourceIcon(input)}
-                                            <span className="text-xs capitalize">{input.replace(/_/g, " ")}</span>
+                                            <span className="text-xs capitalize">
+                                              {input.replace(/_/g, " ")}
+                                            </span>
                                           </div>
                                         ))}
                                       </div>
                                     )}
                                     {device.outputs?.length > 0 && (
                                       <div className="flex items-center gap-1 mt-1">
-                                        <strong className="w-12">Outputs:</strong>
+                                        <strong className="w-12">
+                                          Outputs:
+                                        </strong>
                                         {device.outputs.map((output, idx) => (
-                                          <div key={`output-icon-${idx}`} className="flex items-center gap-1" title={output}>
+                                          <div
+                                            key={`output-icon-${idx}`}
+                                            className="flex items-center gap-1"
+                                            title={output}
+                                          >
                                             {getResourceIcon(output)}
-                                            <span className="text-xs capitalize">{output.replace(/_/g, " ")}</span>
+                                            <span className="text-xs capitalize">
+                                              {output.replace(/_/g, " ")}
+                                            </span>
                                           </div>
                                         ))}
                                       </div>

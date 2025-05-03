@@ -303,143 +303,199 @@ export default function SimulatorPage() {
           </div>
         </TabsContent>
         <TabsContent value="settings" className="flex-1 overflow-auto">
-          <div className="relative bg-[#0d1b2a] w-full max-w-6xl h-[800px] mx-auto mt-4 rounded border border-gray-700">
-            {[
-              {
-                id: 1,
-                name: "Solar",
-                x: 50,
-                y: 100,
-                image: "/assets/isometric_images/solar.png",
-              },
-              {
-                id: 2,
-                name: "Data Center",
-                x: 300,
-                y: 200,
-                image: "/assets/isometric_images/data-center.png",
-              },
-              {
-                id: 3,
-                name: "Battery",
-                x: 550,
-                y: 100,
-                image: "/assets/isometric_images/battery.png",
-              },
-              {
-                id: 4,
-                name: "Wind",
-                x: 100,
-                y: 400,
-                image: "/assets/isometric_images/wind_mill.png",
-              },
-              {
-                id: 5,
-                name: "Cooling",
-                x: 500,
-                y: 400,
-                image: "/assets/isometric_images/water-cooling.png",
-              },
-            ].map((el) => (
-              <div
-                key={el.id}
-                className="absolute flex flex-col items-center"
-                style={{ left: el.x, top: el.y }}
-              >
-                <img
-                  src={el.image}
-                  alt={el.name}
-                  className="w-20 drop-shadow-md"
-                />
-                <span className="text-white text-xs mt-1">{el.name}</span>
-              </div>
-            ))}
-
-            {/* LÍNEAS DE CONEXIÓN animadas */}
-            <svg className="absolute w-full h-full pointer-events-none">
-              <defs>
-                <linearGradient
-                  id="electric-flow"
-                  gradientTransform="rotate(90)"
+          <div className="mt-4 flex justify-center gap-4 w-full">
+            <div className="relative bg-[#0d1b2a] w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-700">
+              {[
+                {
+                  id: 1,
+                  name: "Solar",
+                  x: 50,
+                  y: 100,
+                  image: "/assets/isometric_images/solar.png",
+                },
+                {
+                  id: 2,
+                  name: "Data Center",
+                  x: 300,
+                  y: 200,
+                  image: "/assets/isometric_images/data-center.png",
+                },
+                {
+                  id: 3,
+                  name: "Battery",
+                  x: 550,
+                  y: 100,
+                  image: "/assets/isometric_images/battery.png",
+                },
+                {
+                  id: 4,
+                  name: "Wind",
+                  x: 100,
+                  y: 400,
+                  image: "/assets/isometric_images/wind_mill.png",
+                },
+                {
+                  id: 5,
+                  name: "Cooling",
+                  x: 500,
+                  y: 400,
+                  image: "/assets/isometric_images/water-cooling.png",
+                },
+              ].map((el) => (
+                <div
+                  key={el.id}
+                  className="absolute flex flex-col items-center"
+                  style={{ left: el.x, top: el.y }}
                 >
-                  <stop offset="0%" stopColor="#facc15" />
-                  <stop offset="100%" stopColor="#fcd34d" />
-                </linearGradient>
-                <linearGradient id="water-flow" gradientTransform="rotate(90)">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#0ea5e9" />
-                </linearGradient>
-                <style>
-                  {`
-                    .flow-line {
-                      stroke-dasharray: 8;
-                      stroke-dashoffset: 0;
-                      animation: dash 1s linear infinite;
-                    }
-
-                    @keyframes dash {
-                      to {
-                        stroke-dashoffset: -16;
-                      }
-                    }
-
-                    .mqtt-status {
-                      animation: blink 1.5s infinite;
-                    }
-
-                    @keyframes blink {
-                      0%, 100% { opacity: 1; }
-                      50% { opacity: 0.5; }
-                    }
-                  `}
-                </style>
-              </defs>
-
-              <line
-                x1="90"
-                y1="120"
-                x2="280"
-                y2="220"
-                stroke="url(#electric-flow)"
-                strokeWidth="3"
-                className="flow-line"
-              />
-              <line
-                x1="320"
-                y1="220"
-                x2="530"
-                y2="120"
-                stroke="url(#water-flow)"
-                strokeWidth="3"
-                className="flow-line"
-              />
-              <line
-                x1="90"
-                y1="120"
-                x2="110"
-                y2="420"
-                stroke="url(#electric-flow)"
-                strokeWidth="3"
-                className="flow-line"
-              />
-              <line
-                x1="320"
-                y1="220"
-                x2="500"
-                y2="420"
-                stroke="url(#water-flow)"
-                strokeWidth="3"
-                className="flow-line"
-              />
-            </svg>
-
-            <div className="absolute top-4 left-4 text-white text-sm bg-black/40 p-2 rounded mqtt-status">
-              {Object.entries(mqttValues).map(([topic, status]) => (
-                <div key={topic}>
-                  <span className="font-mono">{topic}:</span> {status}
+                  <img
+                    src={el.image}
+                    alt={el.name}
+                    className="w-20 drop-shadow-md"
+                  />
+                  <span className="text-white text-xs mt-1">{el.name}</span>
                 </div>
               ))}
+
+              {/* LÍNEAS DE CONEXIÓN animadas */}
+              <svg className="absolute w-full h-full pointer-events-none">
+                <defs>
+                  <linearGradient
+                    id="electric-flow"
+                    gradientTransform="rotate(90)"
+                  >
+                    <stop offset="0%" stopColor="#facc15" />
+                    <stop offset="100%" stopColor="#fcd34d" />
+                  </linearGradient>
+                  <linearGradient id="water-flow" gradientTransform="rotate(90)">
+                    <stop offset="0%" stopColor="#38bdf8" />
+                    <stop offset="100%" stopColor="#0ea5e9" />
+                  </linearGradient>
+                  <style>
+                    {`
+                      .flow-line {
+                        stroke-dasharray: 8;
+                        stroke-dashoffset: 0;
+                        animation: dash 1s linear infinite;
+                      }
+
+                      @keyframes dash {
+                        to {
+                          stroke-dashoffset: -16;
+                        }
+                      }
+
+                      .mqtt-status {
+                        animation: blink 1.5s infinite;
+                      }
+
+                      @keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                      }
+                    `}
+                  </style>
+                </defs>
+
+                <line
+                  x1="90"
+                  y1="120"
+                  x2="280"
+                  y2="220"
+                  stroke="url(#electric-flow)"
+                  strokeWidth="3"
+                  className="flow-line"
+                />
+                <text
+                  x="185"
+                  y="215"
+                  fill="white"
+                  fontSize="12"
+                  textAnchor="middle"
+                >
+                  120 MW
+                </text>
+                <line
+                  x1="320"
+                  y1="220"
+                  x2="530"
+                  y2="120"
+                  stroke="url(#water-flow)"
+                  strokeWidth="3"
+                  className="flow-line"
+                />
+                <text
+                  x="425"
+                  y="215"
+                  fill="white"
+                  fontSize="12"
+                  textAnchor="middle"
+                >
+                  80 m³/h
+                </text>
+                <line
+                  x1="90"
+                  y1="120"
+                  x2="110"
+                  y2="420"
+                  stroke="url(#electric-flow)"
+                  strokeWidth="3"
+                  className="flow-line"
+                />
+                <text
+                  x="100"
+                  y="270"
+                  fill="white"
+                  fontSize="12"
+                  textAnchor="middle"
+                >
+                  60 MW
+                </text>
+                <line
+                  x1="320"
+                  y1="220"
+                  x2="500"
+                  y2="420"
+                  stroke="url(#water-flow)"
+                  strokeWidth="3"
+                  className="flow-line"
+                />
+                <text
+                  x="410"
+                  y="320"
+                  fill="white"
+                  fontSize="12"
+                  textAnchor="middle"
+                >
+                  50 m³/h
+                </text>
+              </svg>
+
+              <div className="absolute top-4 left-4 text-white text-sm bg-black/40 p-2 rounded mqtt-status">
+                {Object.entries(mqttValues).map(([topic, status]) => (
+                  <div key={topic}>
+                    <span className="font-mono">{topic}:</span> {status}
+                  </div>
+                ))}
+              </div>
             </div>
+
+            <Card className="w-96 h-[800px] overflow-auto">
+              <CardHeader>
+                <CardTitle>Simulation Log</CardTitle>
+                <CardDescription>Latest warnings and errors</CardDescription>
+              </CardHeader>
+              <div className="p-4 space-y-2">
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-sm">
+                  ⚠️ Solar input too low
+                </div>
+                <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-2 rounded text-sm">
+                  ❌ Battery failure
+                </div>
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-sm">
+                  ⚠️ Cooling efficiency reduced
+                </div>
+              </div>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
