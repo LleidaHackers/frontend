@@ -9,35 +9,28 @@ import {
 import { HousePlug } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
-const dataCenters = [
-  {
-    id: 1,
-    name: "Data Center 1",
-    location: "Location 1",
-    budget: 100000,
-    energyPriduction: 50000,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Data Center 2",
-    location: "Location 2",
-    status: "Inactive",
-    budget: 200000,
-    energyPriduction: 100000,
-  },
-  {
-    id: 3,
-    name: "Data Center 2",
-    location: "Location 2",
-    status: "Inactive",
-    budget: 200000,
-    energyPriduction: 100000,
-  },
-];
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+
 export default function DataCentersPage() {
   const router = useRouter();
+  const [dataCenters, setDataCenters] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchDataCenters = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/data-center`);
+        const data = await response.json();
+        console.log("Data centers:", data);
+        setDataCenters(data);
+      } catch (error) {
+        console.error("Error loading data centers:", error);
+      }
+    };
+
+    fetchDataCenters();
+  }, []);
+
   return (
     <div className="p-8">
       <div className="flex flex-col md:flex-row items-center justify-between mb-4">
@@ -51,11 +44,17 @@ export default function DataCentersPage() {
           </Button>
         </div>
       </div>
-
+      {!dataCenters.length && (
+        <div className="flex items-center justify-center">
+          <p className="text-lg text-muted-foreground">
+            No data centers found. Please create one.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {dataCenters.map((center) => (
           <Card
-            key={center.id}
+            key={center._id ?? center.id}
             className="shadow-md p-4 flex "
             // onClick={() => router.push(`/data-centers/sandbox/${center.id}`)}
           >
@@ -65,7 +64,7 @@ export default function DataCentersPage() {
             <div className="">
               <div className="items-center justify-center flex flex-col gap-y-2">
                 <CardTitle className="text-xl font-semibold text-center">
-                  {center.name}
+                  {center.projectName}
                 </CardTitle>
                 <Badge
                   className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -79,26 +78,26 @@ export default function DataCentersPage() {
               </div>
               <CardContent className="mt-2 space-y-1 p-0">
                 <p className="text-sm text-muted-foreground">
-                  📍 Location: {center.location}
+                  📍 Location: {center.country}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  💰 Budget: ${center.budget.toLocaleString()}
+                  💰 Budget: ${center.budget?.toLocaleString?.() ?? "N/A"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   ⚡ Energy Production:{" "}
-                  {center.energyPriduction.toLocaleString()} kW
+                  {center.energyPriduction?.toLocaleString?.() ?? "N/A"} kW
                 </p>
               </CardContent>
             </div>
             <CardFooter className="flex justify-center mt-4 gap-x-4">
               <Button
-                onClick={() => router.push(`/data-centers/sandbox/${center.id}`)}
+                onClick={() => router.push(`/data-centers/sandbox/${center._id?.$oid}`)}
               >
                 Sandbox
               </Button>
               <Button
                 onClick={() =>
-                  router.push(`/data-centers/simulator/${center.id}`)
+                  router.push(`/data-centers/simulator/${center._id?.$oid}`)
                 }
               >
                 Simulator
@@ -106,7 +105,7 @@ export default function DataCentersPage() {
               {/*if data center is disconetec inable the button to monitor */}
               <Button
                 onClick={() =>
-                  router.push(`/data-center/monitor/${center.id}`)
+                  router.push(`/data-center/monitor/${center._id?.$oid}`)
                 }
                 disabled={center.status === "Inactive"}
                 variant="outline"

@@ -1,4 +1,82 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+const data = {
+  "grid": {
+    "width": 100,
+    "height": 500
+  },
+  "blocks": [
+    {
+      "id": 309887,
+      "name": "asdf",
+      "type": "Transformer_100",
+      "color": "#FF0000",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "dimensions": {
+        "width": 40,
+        "height": 45
+      }
+    },
+    {
+      "id": 428269,
+      "name": "asdf",
+      "type": "Transformer_100",
+      "color": "#FF0000",
+      "position": {
+        "x": 40.0,
+        "y": 0.0
+      },
+      "dimensions": {
+        "width": 40,
+        "height": 45
+      }
+    },
+    {
+      "id": 392429,
+      "name": "asdf",
+      "type": "Transformer_100",
+      "color": "#FF0000",
+      "position": {
+        "x": 40.0,
+        "y": 45.0
+      },
+      "dimensions": {
+        "width": 40,
+        "height": 45
+      }
+    },
+    {
+      "id": 919969,
+      "name": "asdf",
+      "type": "Transformer_100",
+      "color": "#FF0000",
+      "position": {
+        "x": 40.0,
+        "y": 90.0
+      },
+      "dimensions": {
+        "width": 40,
+        "height": 45
+      }
+    },
+    {
+      "id": 238949,
+      "name": "asdf",
+      "type": "Transformer_100",
+      "color": "#FF0000",
+      "position": {
+        "x": 40.0,
+        "y": 135.0
+      },
+      "dimensions": {
+        "width": 40,
+        "height": 45
+      }
+    }
+  ]
+}
 
 export default function SimulatorPage() {
   return (
@@ -10,29 +88,20 @@ export default function SimulatorPage() {
           <TabsTrigger value="settings">SCADA</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="flex-1 overflow-auto">
-          <div className="relative bg-gray-100 border border-gray-300 w-full max-w-4xl mx-auto h-[600px] mt-4">
-            {[
-              {
-                id: 1,
-                type: "Transformer",
-                position: { x: 50, y: 100 },
-                dimensions: { width: 100, height: 60 },
-              },
-              {
-                id: 2,
-                type: "Inverter",
-                position: { x: 200, y: 150 },
-                dimensions: { width: 120, height: 80 },
-              },
-            ].map((block) => (
+          <div
+            className="relative bg-gray-100 border border-gray-300 mx-auto mt-4"
+            style={{ width: data.grid.width, height: data.grid.height }}
+          >
+            {data.blocks.map((block) => (
               <div
                 key={block.id}
-                className="absolute bg-blue-500 text-white text-xs flex items-center justify-center rounded"
+                className="absolute text-white text-xs flex items-center justify-center rounded shadow"
                 style={{
                   top: block.position.y,
                   left: block.position.x,
                   width: block.dimensions.width,
                   height: block.dimensions.height,
+                  backgroundColor: block.color,
                 }}
               >
                 {block.type}

@@ -74,7 +74,7 @@ const formSchema = z.object({
     .optional(),
 });
 
-const MisTiendasPage = () => {
+const createDataCenter = () => {
   const route = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -88,16 +88,19 @@ const MisTiendasPage = () => {
     console.log("SUBMITTING FORM:", data);
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.BACKEND_URL}/create-data-center`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-        }),
-      });
-      
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/create-data-center`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...data,
+          }),
+        }
+      );
+
       if (res.ok) {
         setLoading(false);
         toast.success("Data center created successfully");
@@ -329,4 +332,4 @@ const MisTiendasPage = () => {
   );
 };
 
-export default MisTiendasPage;
+export default createDataCenter;

@@ -103,14 +103,14 @@ const CustomNode = ({
 }) => {
   return (
     <div
-      className="group relative rounded-md border p-3 text-sm shadow-md min-w-[140px]"
+      className="group relative rounded-lg border p-4 text-sm shadow-lg min-w-[160px] bg-white"
       style={{
         backgroundColor: data?.style?.backgroundColor ?? "#FFF",
         border: "1px solid #CBD5E1",
       }}
     >
       <div
-        className="absolute -top-5 -right-5 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center cursor-pointer z-50 shadow-md"
+        className="absolute -top-6 -right-6 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center cursor-pointer z-50 shadow-md"
         onClick={(e) => {
           e.stopPropagation();
           setNodes((nds) => nds.filter((n) => n.id !== id));
@@ -119,16 +119,24 @@ const CustomNode = ({
       >
         ×
       </div>
-      <div className="font-semibold text-center whitespace-pre-line">
-        {data.label}
+      <div className="text-center font-semibold">{data.label?.split("\n")[0]}</div>
+      <div className="text-center text-xs text-muted-foreground mb-2">
+        ${data.label?.match(/\(\$(\d+)\)/)?.[1] ?? "0"}
       </div>
-      <div className="text-xs text-muted-foreground text-center mb-2">
-        {data.type}
+      <div className="flex flex-col gap-1 text-xs">
+        {data.power && data.power > 0 && (
+          <div className="text-green-600">⚡ Produces: {data.power}W</div>
+        )}
+        {data.demand && data.demand > 0 && (
+          <div className="text-red-600">⚡ Consumes: {data.demand}W</div>
+        )}
       </div>
+
+      {/* Inputs */}
       {data.inputs?.map((input, idx) => (
         <div
           key={`input-${input}`}
-          style={{ position: "absolute", left: -20, top: 30 + idx * 20 }}
+          style={{ position: "absolute", left: -24, top: 40 + idx * 20 }}
           className="flex items-center"
         >
           {getResourceIcon(input)}
@@ -146,10 +154,12 @@ const CustomNode = ({
           />
         </div>
       ))}
+
+      {/* Outputs */}
       {data.outputs?.map((output, idx) => (
         <div
           key={`output-${output}`}
-          style={{ position: "absolute", right: -20, top: 30 + idx * 20 }}
+          style={{ position: "absolute", right: -24, top: 40 + idx * 20 }}
           className="flex items-center gap-1"
         >
           <Handle
@@ -455,21 +465,33 @@ function FlowCanvas() {
   const loadWorkflow = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${backendUrl}/modules/workflow/${dataCenterId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.nodes && data?.edges) {
-          setNodes(data.nodes);
-          setEdges(data.edges);
-        } else {
-          // Si no hay workflow guardado, carga nodos por defecto
-          setNodes(initialNodes);
-          setEdges(initialEdges);
-        }
+      const response = await fetch(`${backendUrl}/modules/get/${dataCenterId}`);
+      if (!response.ok) throw new Error("Invalid response");
+
+      const parsed = await response.json();
+
+      if (Array.isArray(parsed?.nodes) && Array.isArray(parsed?.edges)) {
+        const cleanNodes = parsed.nodes.map((node: any) => {
+          const {
+            selected,
+            dragging,
+            positionAbsolute,
+            width,
+            height,
+            ...rest
+          } = node;
+          return rest;
+        });
+
+        const cleanEdges = parsed.edges.map((edge: any) => {
+          const { selected, ...rest } = edge;
+          return rest;
+        });
+
+        setNodes(cleanNodes);
+        setEdges(cleanEdges);
       } else {
-        // Si no existe aún
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+        throw new Error("Parsed data missing nodes or edges");
       }
     } catch (error) {
       console.error("Error loading workflow:", error);
@@ -537,6 +559,7 @@ function FlowCanvas() {
     const state = { nodes, edges };
     setSaving(true);
     try {
+      console.log("Saving configuration:", state);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/modules/save/${dataCenterId}`,
         {
@@ -573,6 +596,7 @@ function FlowCanvas() {
       });
       if (response.ok) {
         const data = await response.json();
+
         // Agrupamos por tipo usando el objeto real de modules.json
         const grouped: Record<string, DeviceDefinition[]> = {};
         for (const category of Object.keys(data)) {
