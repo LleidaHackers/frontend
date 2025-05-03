@@ -1,5 +1,4 @@
 "use client";
-
 import ReactFlow, {
   Background,
   Controls,
@@ -263,105 +262,8 @@ const test = [
     outputs: ["power"],
     type: "source",
   },
-]
-const devices: Record<string, DeviceDefinition[]> = {
-  source: [
-    {
-      name: "Solar Panel",
-      icon: "Sun",
-      cost: 2000,
-      surface: 2,
-      energyConsumption: 0,
-      energyProduction: 20,
-      waterUsage: 0,
-      waterProduction: 0,
-      chilledWaterUsage: 0,
-      chilledWaterProduction: 0,
-      distilledWaterUsage: 0,
-      distilledWaterProduction: 0,
-      internalNetworkUsage: 2,
-      internalNetworkProduction: 2,
-      externalNetworkProduction: 0,
-      soundLevel: 0,
-      procesProduction: 0,
-      dataStorageProduction: 0,
-      inputs: ["chilledWater", "distilledWater"],
-      outputs: ["power"],
-      type: "source",
-    },
-    {
-      name: "Water Pump",
-      icon: "Droplet",
-      cost: 1200,
-      surface: 3,
-      energyConsumption: 10,
-      energyProduction: 0,
-      waterUsage: 0,
-      waterProduction: 10,
-      chilledWaterUsage: 0,
-      chilledWaterProduction: 0,
-      distilledWaterUsage: 0,
-      distilledWaterProduction: 0,
-      internalNetworkUsage: 0,
-      internalNetworkProduction: 0,
-      externalNetworkProduction: 0,
-      soundLevel: 0,
-      procesProduction: 0,
-      dataStorageProduction: 0,
-      inputs: ["power"],
-      outputs: ["water"],
-      type: "source",
-    },
-  ],
-  sink: [
-    {
-      name: "Server",
-      icon: "Server",
-      cost: 1500,
-      surface: 4,
-      energyConsumption: 10,
-      energyProduction: 0,
-      waterUsage: 0,
-      waterProduction: 0,
-      chilledWaterUsage: 0,
-      chilledWaterProduction: 0,
-      distilledWaterUsage: 0,
-      distilledWaterProduction: 0,
-      internalNetworkUsage: 0,
-      internalNetworkProduction: 0,
-      externalNetworkProduction: 0,
-      soundLevel: 0,
-      procesProduction: 0,
-      dataStorageProduction: 0,
-      inputs: ["power"],
-      outputs: [],
-      type: "sink",
-    },
-    {
-      name: "Cooler",
-      icon: "Snowflake",
-      cost: 1000,
-      surface: 5,
-      energyConsumption: 5,
-      energyProduction: 0,
-      waterUsage: 2,
-      waterProduction: 0,
-      chilledWaterUsage: 0,
-      chilledWaterProduction: 0,
-      distilledWaterUsage: 0,
-      distilledWaterProduction: 0,
-      internalNetworkUsage: 0,
-      internalNetworkProduction: 0,
-      externalNetworkProduction: 0,
-      soundLevel: 0,
-      procesProduction: 0,
-      dataStorageProduction: 0,
-      inputs: ["power", "water"],
-      outputs: [],
-      type: "sink",
-    },
-  ],
-};
+];
+
 
 function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -371,6 +273,7 @@ function FlowCanvas() {
   );
   const [showSidebar, setShowSidebar] = useState(true);
   const [showSpecs, setShowSpecs] = useState(false);
+  const [devices, setDevices] = useState<DeviceDefinition[]>([]);
   // Specs
   const [budget, setBudget] = useState(50000);
   const [totalBudget, setTotalBudget] = useState(50000);
@@ -518,6 +421,30 @@ function FlowCanvas() {
     }
   };
 
+  const getModules = async () => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      console.log("Backend URL:", backendUrl);
+      const fullUrl = `${backendUrl}/modules/modules`;
+      console.log("Fetching from:", fullUrl);
+      const response = await fetch(fullUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDevices(data);
+        console.log("Modules:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+    }
+  }
+  useEffect(() => {
+    getModules();
+  }, []);
   return (
     <>
       {/*Toogle Menu Bar */}
@@ -638,7 +565,9 @@ function FlowCanvas() {
                     <div className="grid grid-cols-2 gap-3">
                       {items
                         .filter((device) =>
-                          device.name.toLowerCase().includes(search.toLowerCase())
+                          device.name
+                            .toLowerCase()
+                            .includes(search.toLowerCase())
                         )
                         .map((device, index) => (
                           <Card
@@ -668,7 +597,9 @@ function FlowCanvas() {
                                     <li key={key}>
                                       {key
                                         .replace(/([A-Z])/g, " $1")
-                                        .replace(/^./, (str) => str.toUpperCase())}
+                                        .replace(/^./, (str) =>
+                                          str.toUpperCase()
+                                        )}
                                       : {val}
                                     </li>
                                   ))}
