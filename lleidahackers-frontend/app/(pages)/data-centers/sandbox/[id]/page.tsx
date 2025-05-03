@@ -48,6 +48,10 @@ import {
   Lightbulb,
   HelpCircle,
   Loader2,
+  DatabaseZap,
+  HardDrive,
+  Waves,
+  CpuCooler,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import "reactflow/dist/style.css";
@@ -70,27 +74,40 @@ type CustomNodeData = {
 };
 
 const getResourceIcon = (type: string) => {
-  const normalized = type.toLowerCase();
+  const normalized = type.toLowerCase().replace(/\s+/g, "_");
 
   switch (normalized) {
-    case "power":
     case "usable_power":
-      return <Lightbulb className="w-3 h-3 text-yellow-500" />;
+      return <Lightbulb className="w-5 h-5 text-yellow-500" />;
+    case "power_source":
+      return <Lightbulb className="w-5 h-5 text-yellow-500" />;
+    case "power":
+      return <Lightbulb className="w-5 h-5 text-yellow-500" />;
+    case "grid_connection":
+      return <Bolt className="w-5 h-5 text-yellow-700" />;
     case "water":
-      return <Droplet className="w-3 h-3 text-blue-600" />;
-    case "Fresh_Water":
-      return <Snowflake className="w-3 h-3 text-cyan-600" />;
-    case "distilledwater":
-      return <FlaskConical className="w-3 h-3 text-indigo-600" />;
-    case "internalnetwork":
-    case "interal_network":
-      return <Network className="w-3 h-3 text-orange-600" />;
-    case "externalnetwork":
-      return <Globe className="w-3 h-3 text-emerald-600" />;
+      return <Waves className="w-5 h-5 text-blue-500" />;
+    case "water_connection":
+      return <Droplet className="w-5 h-5 text-blue-600" />;
+    case "fresh_water":
+      return <Snowflake className="w-5 h-5 text-cyan-600" />;
+    case "distilled_water":
+      return <FlaskConical className="w-5 h-5 text-indigo-600" />;
+    case "chilled_water":
+      return <Snowflake className="w-5 h-5 text-sky-400" />;
+    case "internal_network":
+      return <Network className="w-5 h-5 text-orange-600" />;
+    case "external_network":
+      return <Globe className="w-5 h-5 text-emerald-600" />;
     case "proces":
-      return <Cpu className="w-3 h-3 text-gray-700" />;
-    case "datastorage":
-      return <Database className="w-3 h-3 text-purple-700" />;
+      return <Cpu className="w-5 h-5 text-gray-700" />;
+    case "processing":
+      return <Cpu className="w-5 h-5 text-gray-700" />;
+    case "data_storage":
+      return <Database className="w-5 h-5 text-purple-700" />;
+    case "proceccing_connection":
+      return <Cpu className="w-5 h-5 text-gray-700" />;
+
     default:
       return <span className="text-xs">{type}</span>;
   }
@@ -771,7 +788,11 @@ function FlowCanvas() {
               </Button>
             </div>
             <div className="flex items-center space-x-2">
-              <Button className="h-12 text-base px-5" onClick={handleSave} disabled={saving}>
+              <Button
+                className="h-12 text-base px-5"
+                onClick={handleSave}
+                disabled={saving}
+              >
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -995,17 +1016,17 @@ function FlowCanvas() {
                                 {LucideIcon && (
                                   <LucideIcon className="w-5 h-5 text-primary mx-auto" />
                                 )}
-                                <CardTitle className="text-base font-bold">
+                                <CardTitle className="text-lg font-bold">
                                   {device.name.replace(
                                     new RegExp(`^${type}_?`, "i"),
                                     ""
                                   )}
                                 </CardTitle>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-base text-muted-foreground">
                                   ${device.cost}
                                 </div>
                               </CardHeader>
-                              <CardContent className="text-xs text-muted-foreground text-center px-2">
+                              <CardContent className="text-sm text-muted-foreground text-center px-2">
                                 {device.energyProduction > 0 && (
                                   <div>
                                     Produces ⚡ {device.energyProduction}W
