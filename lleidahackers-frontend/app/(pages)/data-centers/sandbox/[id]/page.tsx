@@ -177,7 +177,7 @@ const CustomNode = ({
         ×
       </div>
       <div className="text-center font-semibold">
-        {data.label?.split("\n")[0]}
+        {data.label?.split("\n")[0].replace(/_/g, " ")}
       </div>
       <div className="text-center text-xs text-muted-foreground mb-2">
         ${data.label?.match(/\(\$(\d+)\)/)?.[1] ?? "0"}
@@ -186,9 +186,6 @@ const CustomNode = ({
         {data.power && data.power > 0 && (
           <div className="text-green-600">⚡ Produces: {data.power}W</div>
         )}
-        {data.demand && data.demand > 0 && (
-          <div className="text-red-600">⚡ Consumes: {data.demand}W</div>
-        )}
         {data.freshWaterUsage && data.freshWaterUsage > 0 && (
           <div className="text-blue-600">💧 Consumes: {data.freshWaterUsage}L Fresh Water</div>
         )}
@@ -196,7 +193,6 @@ const CustomNode = ({
           <div className="text-cyan-600">💧 Produces: {data.freshWaterProduction}L Fresh Water</div>
         )}
       </div>
-
       {/* Inputs */}
       {data.inputs?.map((input, idx) => (
         <div
@@ -1041,11 +1037,11 @@ function FlowCanvas() {
                                     Produces ⚡ {device.energyProduction}MW
                                   </div>
                                 )}
-                                {device.energyConsumption > 0 && (
+                                {/* {device.energyConsumption > 0 && (
                                   <div>
                                     Consumes ⚡ {device.energyConsumption}MW
                                   </div>
-                                )}
+                                )} */}
                                 {device.waterProduction > 0 && (
                                   <div>
                                     Produces 💧 {device.waterProduction}KL
