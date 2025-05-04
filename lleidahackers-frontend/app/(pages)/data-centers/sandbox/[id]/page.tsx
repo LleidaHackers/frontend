@@ -964,6 +964,25 @@ function FlowCanvas() {
                         setTimeout(() => {
                           clearInterval(interval);
                           setNodes((prev) => [...prev, ...animatedNodes]);
+                          // Update metrics after AI suggestions
+                          animatedNodes.forEach((node: any) => {
+                            setBudget((b) => b - (node.data?.cost ?? 0));
+                            setOccupiedSurface((s) => s + (node.data?.surface ?? 0));
+                            setConsumeUsage((c) => c + (node.data?.demand ?? 0));
+                            setAccomulatePower((p) => p + (node.data?.power ?? 0));
+                            setWaterUsage((w) => w + (node.data?.waterUsage ?? 0));
+                            setChilledWaterUsage((c) => c + (node.data?.chilledWaterUsage ?? 0));
+                            setDistilledWaterUsage((d) => d + (node.data?.distilledWaterUsage ?? 0));
+                            setFreshWaterUsage((f) => f + (node.data?.freshWaterUsage ?? 0));
+                            setFreshWaterProduction((f) => f + (node.data?.freshWaterProduction ?? 0));
+                            setDistilledWaterProduction((d) => d + (node.data?.distilledWaterProduction ?? 0));
+                            setChilledWaterProduction((c) => c + (node.data?.chilledWaterProduction ?? 0));
+                            setInternalNetworkUsage((n) => n + (node.data?.internalNetworkUsage ?? 0));
+                            setInternalNetworkProduction((n) => n + (node.data?.internalNetworkProduction ?? 0));
+                            setExternalNetworkProduction((e) => e + (node.data?.externalNetworkProduction ?? 0));
+                            setProcesProduction((p) => p + (node.data?.procesProduction ?? 0));
+                            setDataStorageProduction((d) => d + (node.data?.dataStorageProduction ?? 0));
+                          });
                           setEdges((prev) => [...prev, ...newEdges]);
                           toast.success("Sugerencias añadidas. Pulsa 'Apply' para confirmar.");
                           setButtonText("🤖 Autocomplete with AI");
