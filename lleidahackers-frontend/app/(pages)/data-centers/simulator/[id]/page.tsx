@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
@@ -105,6 +105,10 @@ export default function SimulatorPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("satellite");
 
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+  });
+
   const handleMouseDown = (id: number) => (e: React.MouseEvent) => {
     setDraggingId(id);
   };
@@ -163,6 +167,76 @@ export default function SimulatorPage() {
     "topic/wind": "OK",
   };
 
+  // --- SCADA backend-like data (replace with backend call when available) ---
+  const scadaData = [
+    {
+      id: "solar",
+      name: "Solar_Panel",
+      posX: 50,
+      posY: 100,
+      connectedIn: [],
+      current_inputs: {},
+    },
+    {
+      id: "datacenter",
+      name: "Data_Center",
+      posX: 300,
+      posY: 200,
+      connectedIn: ["solar", "battery"],
+      current_inputs: { power: 120, water: 80 },
+    },
+    {
+      id: "battery",
+      name: "Battery",
+      posX: 550,
+      posY: 100,
+      connectedIn: ["datacenter"],
+      current_inputs: { power: 60 },
+    },
+    {
+      id: "wind",
+      name: "Wind_Mill",
+      posX: 100,
+      posY: 400,
+      connectedIn: ["solar"],
+      current_inputs: { power: 60 },
+    },
+    {
+      id: "cooling",
+      name: "Water_Cooling",
+      posX: 500,
+      posY: 400,
+      connectedIn: ["datacenter"],
+      current_inputs: { water: 50 },
+    },
+  ];
+
+  const modules = scadaData.map((mod) => ({
+    id: mod.id,
+    name: mod.name.replaceAll("_", " "),
+    x: mod.posX,
+    y: mod.posY,
+    image: `/assets/isometric_images/${mod.name.toLowerCase()}.png`,
+    status: "ok",
+  }));
+
+  const edges = scadaData.flatMap((mod) =>
+    mod.connectedIn?.map((sourceId) => ({
+      sourceId,
+      targetId: mod.id,
+      status: "ok",
+      label: Object.values(mod.current_inputs)
+        .filter((v) => typeof v === "number")
+        .map((v) => `${v}`)
+        .join(" / "),
+    })) ?? []
+  );
+
+  const mqttTopics = modules.map((mod) => ({
+    topic: `topic/${mod.id}`,
+    status: "OK",
+  }));
+
     return (
     <div className="flex flex-col h-screen p-8 w-full">
       <h1 className="text-2xl font-bold text-center">SIMULATING PAGE</h1>
@@ -190,11 +264,7 @@ export default function SimulatorPage() {
           </div>
           <div className="relative mt-4 flex justify-center w-full">
             <div className="flex justify-center w-full">
-              <LoadScript
-                googleMapsApiKey={
-                  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string
-                }
-              >
+              {isLoaded && (
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
                   center={center}
@@ -251,7 +321,7 @@ export default function SimulatorPage() {
                     ))}
                   </div>
                 </GoogleMap>
-              </LoadScript>
+              )}
             </div>
           </div>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto w-full">
@@ -303,45 +373,37 @@ export default function SimulatorPage() {
           </div>
         </TabsContent>
         <TabsContent value="settings" className="flex-1 overflow-auto">
-          <div className="mt-4 flex justify-center gap-4 w-full">
+          <div className="flex justify-center gap-4 mt-4 mb-6">
+            <Button
+              variant="destructive"
+              className="flex gap-2 items-center"
+              onClick={() => toast.error("⚡ Low Voltage Drop triggered")}
+            >
+              <Sun className="w-5 h-5" />
+              Low Voltage Drop
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex gap-2 items-center"
+              onClick={() => toast.warning("🚱 Water Shortage triggered")}
+            >
+              <Droplets className="w-5 h-5" />
+              Water Shortage
+            </Button>
+            <Button
+              variant="default"
+              className="flex gap-2 items-center"
+              onClick={() => toast("🔌 Transformer Failure triggered")}
+            >
+              <Wind className="w-5 h-5" />
+              Transformer Failure
+            </Button>
+          </div>
+          {/* SCADA diagram and Simulation Log side by side */}
+          <div className="flex justify-center gap-4 mt-4 mb-6">
             <div className="relative bg-[#0d1b2a] w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-700">
-              {[
-                {
-                  id: 1,
-                  name: "Solar",
-                  x: 50,
-                  y: 100,
-                  image: "/assets/isometric_images/solar.png",
-                },
-                {
-                  id: 2,
-                  name: "Data Center",
-                  x: 300,
-                  y: 200,
-                  image: "/assets/isometric_images/data-center.png",
-                },
-                {
-                  id: 3,
-                  name: "Battery",
-                  x: 550,
-                  y: 100,
-                  image: "/assets/isometric_images/battery.png",
-                },
-                {
-                  id: 4,
-                  name: "Wind",
-                  x: 100,
-                  y: 400,
-                  image: "/assets/isometric_images/wind_mill.png",
-                },
-                {
-                  id: 5,
-                  name: "Cooling",
-                  x: 500,
-                  y: 400,
-                  image: "/assets/isometric_images/water-cooling.png",
-                },
-              ].map((el) => (
+              {/* Render modules */}
+              {modules.map((el) => (
                 <div
                   key={el.id}
                   className="absolute flex flex-col items-center"
@@ -355,8 +417,7 @@ export default function SimulatorPage() {
                   <span className="text-white text-xs mt-1">{el.name}</span>
                 </div>
               ))}
-
-              {/* LÍNEAS DE CONEXIÓN animadas */}
+              {/* Animated connection lines */}
               <svg className="absolute w-full h-full pointer-events-none">
                 <defs>
                   <linearGradient
@@ -377,17 +438,14 @@ export default function SimulatorPage() {
                         stroke-dashoffset: 0;
                         animation: dash 1s linear infinite;
                       }
-
                       @keyframes dash {
                         to {
                           stroke-dashoffset: -16;
                         }
                       }
-
                       .mqtt-status {
                         animation: blink 1.5s infinite;
                       }
-
                       @keyframes blink {
                         0%, 100% { opacity: 1; }
                         50% { opacity: 0.5; }
@@ -395,90 +453,56 @@ export default function SimulatorPage() {
                     `}
                   </style>
                 </defs>
-
-                <line
-                  x1="90"
-                  y1="120"
-                  x2="280"
-                  y2="220"
-                  stroke="url(#electric-flow)"
-                  strokeWidth="3"
-                  className="flow-line"
-                />
-                <text
-                  x="185"
-                  y="215"
-                  fill="white"
-                  fontSize="12"
-                  textAnchor="middle"
-                >
-                  120 MW
-                </text>
-                <line
-                  x1="320"
-                  y1="220"
-                  x2="530"
-                  y2="120"
-                  stroke="url(#water-flow)"
-                  strokeWidth="3"
-                  className="flow-line"
-                />
-                <text
-                  x="425"
-                  y="215"
-                  fill="white"
-                  fontSize="12"
-                  textAnchor="middle"
-                >
-                  80 m³/h
-                </text>
-                <line
-                  x1="90"
-                  y1="120"
-                  x2="110"
-                  y2="420"
-                  stroke="url(#electric-flow)"
-                  strokeWidth="3"
-                  className="flow-line"
-                />
-                <text
-                  x="100"
-                  y="270"
-                  fill="white"
-                  fontSize="12"
-                  textAnchor="middle"
-                >
-                  60 MW
-                </text>
-                <line
-                  x1="320"
-                  y1="220"
-                  x2="500"
-                  y2="420"
-                  stroke="url(#water-flow)"
-                  strokeWidth="3"
-                  className="flow-line"
-                />
-                <text
-                  x="410"
-                  y="320"
-                  fill="white"
-                  fontSize="12"
-                  textAnchor="middle"
-                >
-                  50 m³/h
-                </text>
+                {edges.map((edge, idx) => {
+                  const getModuleById = (id: string) => modules.find((m) => m.id === id);
+                  const src = getModuleById(edge.sourceId);
+                  const tgt = getModuleById(edge.targetId);
+                  if (!src || !tgt) return null;
+                  // Calculate center points of modules (offset image size/2 for better appearance)
+                  const x1 = src.x + 40;
+                  const y1 = src.y + 40;
+                  const x2 = tgt.x + 40;
+                  const y2 = tgt.y + 40;
+                  // Pick gradient for demonstration
+                  const isWater = edge.label?.includes("m³");
+                  const stroke =
+                    edge.status === "ok"
+                      ? isWater
+                        ? "url(#water-flow)"
+                        : "url(#electric-flow)"
+                      : edge.status === "warning"
+                      ? "orange"
+                      : "red";
+                  // Label position, simple midpoint
+                  const labelX = (x1 + x2) / 2;
+                  const labelY = (y1 + y2) / 2 - 5;
+                  return (
+                    <g key={idx}>
+                      <line
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        stroke={stroke}
+                        strokeWidth="3"
+                        className="flow-line"
+                      />
+                      {edge.label && (
+                        <text
+                          x={labelX}
+                          y={labelY}
+                          fill="white"
+                          fontSize="12"
+                          textAnchor="middle"
+                        >
+                          {edge.label}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
               </svg>
-
-              <div className="absolute top-4 left-4 text-white text-sm bg-black/40 p-2 rounded mqtt-status">
-                {Object.entries(mqttValues).map(([topic, status]) => (
-                  <div key={topic}>
-                    <span className="font-mono">{topic}:</span> {status}
-                  </div>
-                ))}
-              </div>
             </div>
-
             <Card className="w-96 h-[800px] overflow-auto">
               <CardHeader>
                 <CardTitle>Simulation Log</CardTitle>
@@ -496,6 +520,31 @@ export default function SimulatorPage() {
                 </div>
               </div>
             </Card>
+          </div>
+          {/* MQTT Topics Status below the flex row */}
+          <div className="w-full max-w-6xl mx-auto bg-muted p-4 rounded border text-sm text-foreground mt-6">
+            <h4 className="font-semibold mb-2">MQTT Topics Status</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {mqttTopics.map(({ topic, status }) => (
+                <div
+                  key={topic}
+                  className="flex justify-between p-2 rounded bg-background border"
+                >
+                  <span className="font-mono">{topic}</span>
+                  <span
+                    className={
+                      status === "OK"
+                        ? "text-green-600"
+                        : status === "LOW"
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {status}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
