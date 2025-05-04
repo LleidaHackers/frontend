@@ -5,7 +5,19 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
-import { Sun, Volume2, Thermometer, Droplets, Wind, Map, Save, RotateCcw, Zap, Droplet, Plug } from "lucide-react";
+import {
+  Sun,
+  Volume2,
+  Thermometer,
+  Droplets,
+  Wind,
+  Map,
+  Save,
+  RotateCcw,
+  Zap,
+  Droplet,
+  Plug,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -23,78 +35,120 @@ const defaultCenter = { lat: 41.6176, lng: 0.62 };
 
 const data = {
   grid: {
-    width: 500,
-    height: 300,
+    width: 800,
+    height: 800,
   },
   blocks: [
     {
-      id: 309887,
-      name: "asdf",
-      type: "Transformer_100",
-      color: "#FF0000",
+      id: "transformer_5000-1",
+      name: "Transformer_5000",
+      type: "Transformer_5000",
+      color: "048229",
       position: {
         x: 0.0,
         y: 0.0,
       },
       dimensions: {
-        width: 40,
-        height: 45,
+        width: 200,
+        height: 200,
       },
     },
     {
-      id: 428269,
-      name: "asdf",
-      type: "Transformer_100",
-      color: "#FF0000",
+      id: "water_supply_500-2",
+      name: "Water_Supply_500",
+      type: "WaterSupply_500",
+      color: "0339ba",
       position: {
-        x: 40.0,
+        x: 200.0,
+        y: 0.0,
+      },
+      dimensions: {
+        width: 150,
+        height: 100,
+      },
+    },
+    {
+      id: "water_treatment_250-3",
+      name: "Water_Treatment_250",
+      type: "WaterTreatment_250",
+      color: "c95a03",
+      position: {
+        x: 350.0,
+        y: 0.0,
+      },
+      dimensions: {
+        width: 200,
+        height: 200,
+      },
+    },
+    {
+      id: "water_chiller_400-4",
+      name: "Water_Chiller_400",
+      type: "WaterChiller_400",
+      color: "089b94",
+      position: {
+        x: 350.0,
+        y: 200.0,
+      },
+      dimensions: {
+        width: 300,
+        height: 100,
+      },
+    },
+    {
+      id: "network_rack_100-5",
+      name: "Network_Rack_100",
+      type: "NetworkRack_100",
+      color: "89bce9",
+      position: {
+        x: 650.0,
         y: 0.0,
       },
       dimensions: {
         width: 40,
-        height: 45,
+        height: 40,
       },
     },
     {
-      id: 392429,
-      name: "asdf",
-      type: "Transformer_100",
-      color: "#FF0000",
+      id: "server_rack_500-6",
+      name: "Server_Rack_500",
+      type: "ServerRack_500",
+      color: "8c0101",
       position: {
-        x: 40.0,
-        y: 45.0,
+        x: 690.0,
+        y: 0.0,
       },
       dimensions: {
         width: 40,
-        height: 45,
+        height: 40,
       },
     },
     {
-      id: 919969,
-      name: "asdf",
-      type: "Transformer_100",
-      color: "#FF0000",
+      id: "data_rack_100-7",
+      name: "Data_Rack_100",
+      type: "DataRack_100",
+      color: "f100ff",
       position: {
-        x: 40.0,
-        y: 90.0,
+        x: 730.0,
+        y: 0.0,
       },
       dimensions: {
         width: 40,
-        height: 45,
+        height: 40,
       },
     },
     {
-      id: 238949,
-      name: "asdf",
-      type: "Transformer_100",
-      color: "#FF0000",
+      id: "data_rack_100-8",
+      name: "Data_Rack_100",
+      type: "DataRack_100",
+      color: "f100ff",
       position: {
-        x: 40.0,
-        y: 135.0,
+        x: 730.0,
+        y: 40.0,
       },
       dimensions: {
         width: 40,
-        height: 45,
+        height: 40,
       },
     },
   ],
@@ -107,7 +161,10 @@ export default function SimulatorPage() {
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("satellite");
 
   // Center coordinates state
-  const [centerCoords, setCenterCoords] = useState<{ lat: number; lng: number }>(defaultCenter);
+  const [centerCoords, setCenterCoords] = useState<{
+    lat: number;
+    lng: number;
+  }>(defaultCenter);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
@@ -146,7 +203,9 @@ export default function SimulatorPage() {
   useEffect(() => {
     async function fetchCoordinates() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center/${dataCenterId}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center/${dataCenterId}`
+        );
         const json = await res.json();
         const lat = parseFloat(json.latituid);
         const lng = parseFloat(json.longitud);
@@ -221,7 +280,7 @@ export default function SimulatorPage() {
     water_supply: "water-cooling",
     server_rack: "rack",
     data_rack: "data-center",
-    network_rack:"rack1",
+    network_rack: "rack1",
     wind: "wind_mill",
     solar: "solar",
     nuclear: "nuclear",
@@ -244,10 +303,9 @@ export default function SimulatorPage() {
     .map((mod) => {
       const baseName = mod.name?.split("_")[0]?.toLowerCase() || "default";
       // Prefer exact match for 'server_square'
-      let imageKey =
-        Object.keys(imageMap).find((key) =>
-          mod.name?.toLowerCase().includes(key)
-        );
+      let imageKey = Object.keys(imageMap).find((key) =>
+        mod.name?.toLowerCase().includes(key)
+      );
       // Special: if name includes "server_square", use "server_square" as key
       if (mod.name?.toLowerCase().includes("server_square")) {
         imageKey = "server_square";
@@ -257,7 +315,9 @@ export default function SimulatorPage() {
         name: mod.name?.replaceAll("_", " ") ?? "Unknown",
         x: mod.posX ?? 0,
         y: mod.posY ?? 0,
-        image: `/assets/isometric_images/${imageMap[imageKey ?? baseName] || "default"}.png`,
+        image: `/assets/isometric_images/${
+          imageMap[imageKey ?? baseName] || "default"
+        }.png`,
         status: "ok",
       };
     });
@@ -386,19 +446,18 @@ export default function SimulatorPage() {
                     {blocks.map((block) => (
                       <div
                         key={block.id}
-                        className="absolute text-white text-sm flex items-center justify-center rounded shadow cursor-move"
+                        className="absolute text-white text-sm flex items-center justify-center rounded shadow cursor-move text-center px-2"
                         style={{
                           top: block.position.y,
                           left: block.position.x,
                           width: block.dimensions.width,
                           height: block.dimensions.height,
-                          backgroundColor: block.color,
-                          opacity: 0.4,
-                          border: "1px solid #000",
+                          backgroundColor: `#${block.color}`,
+                          border: "2px solid #000",
                         }}
                         onMouseDown={handleMouseDown(block.id)}
                       >
-                        {block.type}
+                        {(block.name ?? block.type).split("_")[0]}
                       </div>
                     ))}
                   </div>
@@ -424,7 +483,9 @@ export default function SimulatorPage() {
                   <Volume2 className="w-5 h-5 text-blue-500" />
                   Ambient Noise Level
                 </CardTitle>
-                <CardDescription className="text-lg">42 dB (rural/suburban zone)</CardDescription>
+                <CardDescription className="text-lg">
+                  42 dB (rural/suburban zone)
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card>
@@ -433,7 +494,9 @@ export default function SimulatorPage() {
                   <Thermometer className="w-5 h-5 text-red-500" />
                   Temperature
                 </CardTitle>
-                <CardDescription className="text-lg">22°C average</CardDescription>
+                <CardDescription className="text-lg">
+                  22°C average
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card>
@@ -451,7 +514,9 @@ export default function SimulatorPage() {
                   <Wind className="w-5 h-5 text-indigo-500" />
                   Wind Availability
                 </CardTitle>
-                <CardDescription className="text-lg">Moderate (10 km/h average)</CardDescription>
+                <CardDescription className="text-lg">
+                  Moderate (10 km/h average)
+                </CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -485,12 +550,14 @@ export default function SimulatorPage() {
           </div>
           {/* SCADA diagram and Simulation Log side by side */}
           <div className="flex justify-center gap-4 mt-4 mb-6">
-            <div className="relative bg-gray-100 dark:bg-gray-900 w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-300 dark:border-gray-700 flex items-center justify-center">
+            <div className="relative bg-gray-100 bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-70 w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-300 dark:border-gray-700 flex items-center justify-center">
               <div className="relative w-full h-full">
                 {/* Render modules */}
                 {modules.map((el, idx) => {
                   const type = el.name.split(" ")[0];
-                  const groupIndex = modules.filter((m) => m.name.startsWith(type)).indexOf(el);
+                  const groupIndex = modules
+                    .filter((m) => m.name.startsWith(type))
+                    .indexOf(el);
                   const xOffset = groupOffsets[type]?.x || 0;
                   const yOffset = groupOffsets[type]?.y || 0;
                   return (
@@ -498,8 +565,12 @@ export default function SimulatorPage() {
                       key={el.id}
                       className="absolute flex flex-col items-center z-10"
                       style={{
-                        left: el.x === 0 ? xOffset + (groupIndex % 2) * 160 : el.x,
-                        top: el.y === 0 ? yOffset + Math.floor(groupIndex / 2) * 160 : el.y,
+                        left:
+                          el.x === 0 ? xOffset + (groupIndex % 2) * 160 : el.x,
+                        top:
+                          el.y === 0
+                            ? yOffset + Math.floor(groupIndex / 2) * 160
+                            : el.y,
                       }}
                     >
                       <img
@@ -507,7 +578,9 @@ export default function SimulatorPage() {
                         alt={el.name}
                         className="w-20 drop-shadow-md"
                       />
-                      <span className="text-foreground text-sm mt-1">{el.name}</span>
+                      <span className="text-foreground text-sm mt-1">
+                        {el.name}
+                      </span>
                     </div>
                   );
                 })}
@@ -558,17 +631,33 @@ export default function SimulatorPage() {
                     if (!src || !tgt) return null;
                     // Posiciones agrupadas por tipo
                     const srcType = src.name.split(" ")[0];
-                    const srcGroupIndex = modules.filter((m) => m.name.startsWith(srcType)).indexOf(src);
+                    const srcGroupIndex = modules
+                      .filter((m) => m.name.startsWith(srcType))
+                      .indexOf(src);
                     const srcXOffset = groupOffsets[srcType]?.x || 0;
                     const srcYOffset = groupOffsets[srcType]?.y || 0;
-                    const x1 = src.x === 0 ? srcXOffset + (srcGroupIndex % 2) * 160 + 40 : src.x + 40;
-                    const y1 = src.y === 0 ? srcYOffset + Math.floor(srcGroupIndex / 2) * 160 + 40 : src.y + 40;
+                    const x1 =
+                      src.x === 0
+                        ? srcXOffset + (srcGroupIndex % 2) * 160 + 40
+                        : src.x + 40;
+                    const y1 =
+                      src.y === 0
+                        ? srcYOffset + Math.floor(srcGroupIndex / 2) * 160 + 40
+                        : src.y + 40;
                     const tgtType = tgt.name.split(" ")[0];
-                    const tgtGroupIndex = modules.filter((m) => m.name.startsWith(tgtType)).indexOf(tgt);
+                    const tgtGroupIndex = modules
+                      .filter((m) => m.name.startsWith(tgtType))
+                      .indexOf(tgt);
                     const tgtXOffset = groupOffsets[tgtType]?.x || 0;
                     const tgtYOffset = groupOffsets[tgtType]?.y || 0;
-                    const x2 = tgt.x === 0 ? tgtXOffset + (tgtGroupIndex % 2) * 160 + 40 : tgt.x + 40;
-                    const y2 = tgt.y === 0 ? tgtYOffset + Math.floor(tgtGroupIndex / 2) * 160 + 40 : tgt.y + 40;
+                    const x2 =
+                      tgt.x === 0
+                        ? tgtXOffset + (tgtGroupIndex % 2) * 160 + 40
+                        : tgt.x + 40;
+                    const y2 =
+                      tgt.y === 0
+                        ? tgtYOffset + Math.floor(tgtGroupIndex / 2) * 160 + 40
+                        : tgt.y + 40;
                     // Pick gradient for demonstration
                     const isWater =
                       edge.label?.toLowerCase().includes("water") ||
@@ -613,7 +702,9 @@ export default function SimulatorPage() {
             <Card className="w-96 h-[800px] overflow-auto">
               <CardHeader>
                 <CardTitle className="text-2xl">Simulation Log</CardTitle>
-                <CardDescription className="text-lg">Latest warnings and errors</CardDescription>
+                <CardDescription className="text-lg">
+                  Latest warnings and errors
+                </CardDescription>
               </CardHeader>
               <div className="p-4 space-y-2">
                 {logItems.map((log, idx) => (
@@ -658,50 +749,39 @@ export default function SimulatorPage() {
   );
 }
 
-  // Handler for Low Voltage Drop simulation
-  function handleLowVoltageDrop() {
-    toast.error("⚡ Low Voltage Drop triggered");
+// Handler for Low Voltage Drop simulation
+function handleLowVoltageDrop() {
+  toast.error("⚡ Low Voltage Drop triggered");
 
-    // Simulate a voltage drop on the first edge with a label
+  // Elimina completamente la primera línea (índice 0)
+  setEdges((prev) => prev.filter((_, idx) => idx !== 0));
+
+  // Progressive error logs (with accumulating messages)
+  let currentLogs: string[] = [];
+  setTimeout(() => {
+    currentLogs = ["⚡ Voltage drop detected on transformer line"];
+    setLogItems([...currentLogs]);
+  }, 1000);
+  setTimeout(() => {
+    currentLogs.push("🔌 Attempting reroute of power to maintain uptime");
+    setLogItems([...currentLogs]);
+  }, 2000);
+  setTimeout(() => {
+    // Simulate rerouting by changing the first edge
     setEdges((prev) =>
       prev.map((edge, idx) => {
-        if (idx === 0 && edge.label) {
+        if (idx === 0) {
           return {
             ...edge,
-            status: "warning",
-            label: "75 → 55 → 35 → 15 → 0",
+            sourceId: "backup_transformer",
+            label: "⚡ Rerouted: 90",
+            status: "ok",
           };
         }
         return edge;
       })
     );
-
-    // Progressive error logs (with accumulating messages)
-    let currentLogs: string[] = [];
-    setTimeout(() => {
-      currentLogs = ["⚡ Voltage drop detected on transformer line"];
-      setLogItems([...currentLogs]);
-    }, 1000);
-    setTimeout(() => {
-      currentLogs.push("🔌 Attempting reroute of power to maintain uptime");
-      setLogItems([...currentLogs]);
-    }, 2000);
-    setTimeout(() => {
-      // Simulate rerouting by changing the first edge
-      setEdges((prev) =>
-        prev.map((edge, idx) => {
-          if (idx === 0) {
-            return {
-              ...edge,
-              sourceId: "backup_transformer",
-              label: "⚡ Rerouted: 90",
-              status: "ok",
-            };
-          }
-          return edge;
-        })
-      );
-      currentLogs.push("✅ Power rerouted successfully");
-      setLogItems([...currentLogs]);
-    }, 4000);
-  }
+    currentLogs.push("✅ Power rerouted successfully");
+    setLogItems([...currentLogs]);
+  }, 4000);
+}
