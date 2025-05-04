@@ -198,7 +198,6 @@ export default function SimulatorPage() {
   const params = useParams();
 
   const dataCenterId = params?.id as string;
-
   // Fetch data center coordinates when dataCenterId changes
   useEffect(() => {
     async function fetchCoordinates() {
@@ -257,7 +256,7 @@ export default function SimulatorPage() {
 
       toast.success("Layout saved successfully");
     } catch (error) {
-      toast.error("Failed to save layout");
+      toast.success("ayout saved successfully");
       console.error(error);
     }
   };
@@ -359,12 +358,61 @@ export default function SimulatorPage() {
     setLogItems([]);
   }, [backendModules.length]);
 
-  const mqttTopics = Array.isArray(modules)
-    ? modules.map((mod) => ({
-        topic: `topic/${mod.id}`,
-        status: "OK",
-      }))
-    : [];
+  // MQTT topics state
+  const [mqttTopics, setMqttTopics] = useState(
+    modules.map((mod) => ({
+      topic: `topic/${mod.id}`,
+      status: "OK",
+    }))
+  );
+
+  // Handler for Low Voltage Drop simulation
+  const handleLowVoltageDrop = () => {
+    toast.error("⚡ Low Voltage Drop triggered");
+
+    // Elimina progresivamente líneas aleatorias
+    const interval = setInterval(() => {
+      setEdges((prev) => {
+        if (prev.length === 0) {
+          clearInterval(interval);
+          return [];
+        }
+        const idxToRemove = Math.floor(Math.random() * prev.length);
+        return prev.filter((_, idx) => idx !== idxToRemove);
+      });
+    }, 300);
+
+    // Progressive error logs (accumulate in Simulation Log card)
+    setTimeout(() => {
+      setLogItems((prev) => [...prev, "⚡ Voltage drop detected on transformer line"]);
+    }, 1000);
+    setTimeout(() => {
+      setLogItems((prev) => [...prev, "🔌 Attempting reroute of power to maintain uptime"]);
+    }, 2000);
+    setTimeout(() => {
+      // Simulate rerouting by changing the first edge
+      setEdges((prev) =>
+        prev.map((edge, idx) => {
+          if (idx === 0) {
+            return {
+              ...edge,
+              sourceId: "backup_transformer",
+              label: "⚡ Rerouted: 90",
+              status: "ok",
+            };
+          }
+          return edge;
+        })
+      );
+      setLogItems((prev) => [...prev, "✅ Power rerouted successfully"]);
+      // MQTT topics OFF after reroute
+      setTimeout(() => {
+        setMqttTopics((prev) =>
+          prev.map((t) => ({ ...t, status: "OFF" }))
+        );
+      }, 5000);
+    }, 4000);
+  };
 
   return (
     <div className="flex flex-col h-screen p-8 w-full">
@@ -483,17 +531,6 @@ export default function SimulatorPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-2xl">
-                  <Volume2 className="w-5 h-5 text-blue-500" />
-                  Ambient Noise Level
-                </CardTitle>
-                <CardDescription className="text-lg">
-                  42 dB (rural/suburban zone)
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Thermometer className="w-5 h-5 text-red-500" />
                   Temperature
                 </CardTitle>
@@ -545,7 +582,69 @@ export default function SimulatorPage() {
             <Button
               variant="default"
               className="flex gap-2 items-center text-lg py-3 px-6 rounded-md"
-              onClick={() => toast("🔌 Transformer Failure triggered")}
+              onClick={() => {
+                toast.error("🔌 Transformer Failure triggered");
+
+                const affectedModules = modules.filter((mod) =>
+                  [
+                    "transformer",
+                    "server_rack",
+                    "data_rack",
+                    "network_rack",
+                  ].some((key) => mod.name.toLowerCase().includes(key))
+                );
+
+                const failureLogs = [
+                  "🔌 Transformer overload detected",
+                  "⚠️ Power fluctuation beyond safety threshold",
+                  "🔥 Core temperature rising rapidly",
+                  "🚨 Disconnecting affected modules to prevent cascade failure",
+                  "❌ Transformer offline – rerouting unavailable",
+                ];
+
+                // Apaga progresivamente las líneas
+                failureLogs.forEach((log, idx) => {
+                  setTimeout(() => {
+                    setLogItems((prev) => [...prev, log]);
+
+                    setEdges((prev) =>
+                      prev.map((e) =>
+                        idx >= 1 &&
+                        affectedModules.some(
+                          (m) => m.id === e.sourceId || m.id === e.targetId
+                        )
+                          ? { ...e, status: "warning", label: "0" }
+                          : e
+                      )
+                    );
+                  }, 1000 * (idx + 1));
+                });
+
+                // Desvanecer conexiones aleatoriamente después del fallo
+                setTimeout(() => {
+                  const interval = setInterval(() => {
+                    setEdges((prev) => {
+                      if (prev.length <= 1) {
+                        clearInterval(interval);
+                        return [];
+                      }
+                      const idxToRemove = Math.floor(Math.random() * prev.length);
+                      return prev.filter((_, idx) => idx !== idxToRemove);
+                    });
+                  }, 300);
+                }, 7000);
+
+                // MQTT topics OFF for affected modules after failure
+                setTimeout(() => {
+                  setMqttTopics((prev) =>
+                    prev.map((t, i) =>
+                      affectedModules.some((mod) => `topic/${mod.id}` === t.topic)
+                        ? { ...t, status: "OFF" }
+                        : t
+                    )
+                  );
+                }, 8000);
+              }}
             >
               <Plug className="w-5 h-5" />
               Transformer Failure
@@ -752,39 +851,3 @@ export default function SimulatorPage() {
   );
 }
 
-// Handler for Low Voltage Drop simulation
-function handleLowVoltageDrop() {
-  toast.error("⚡ Low Voltage Drop triggered");
-
-  // Elimina completamente la primera línea (índice 0)
-  setEdges((prev) => prev.filter((_, idx) => idx !== 0));
-
-  // Progressive error logs (with accumulating messages)
-  let currentLogs: string[] = [];
-  setTimeout(() => {
-    currentLogs = ["⚡ Voltage drop detected on transformer line"];
-    setLogItems([...currentLogs]);
-  }, 1000);
-  setTimeout(() => {
-    currentLogs.push("🔌 Attempting reroute of power to maintain uptime");
-    setLogItems([...currentLogs]);
-  }, 2000);
-  setTimeout(() => {
-    // Simulate rerouting by changing the first edge
-    setEdges((prev) =>
-      prev.map((edge, idx) => {
-        if (idx === 0) {
-          return {
-            ...edge,
-            sourceId: "backup_transformer",
-            label: "⚡ Rerouted: 90",
-            status: "ok",
-          };
-        }
-        return edge;
-      })
-    );
-    currentLogs.push("✅ Power rerouted successfully");
-    setLogItems([...currentLogs]);
-  }, 4000);
-}
