@@ -58,18 +58,18 @@ export default function DataCentersPage() {
     <div className="p-8">
       <div className="flex flex-col md:flex-row items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold mb-2 text-center">Data Centers</h1>
+          <h1 className="text-3xl font-bold mb-2 text-center">Data Centers</h1>
           <p className="text-center mb-4">Siemens data centers</p>
         </div>
         <div>
-          <Button onClick={() => router.push("/data-centers/create")}>
-            New Data Center
+          <Button size="lg" onClick={() => router.push("/data-centers/create")}>
+            ➕ New Data Center
           </Button>
         </div>
       </div>
       {!dataCenters.length && (
         <div className="flex items-center justify-center">
-          <p className="text-lg text-muted-foreground">
+          <p className="text-xl text-muted-foreground">
             No data centers found. Please create one.
           </p>
         </div>
@@ -83,14 +83,14 @@ export default function DataCentersPage() {
           >
             <div className="absolute top-2 right-2">
               <Button
-                size="icon"
+                size="lg"
                 variant="destructive"
                 onClick={async () => {
                   await handleDelete(center._id?.$oid)();
                   router.refresh();
                 }}
               >
-                <Trash className="h-4 w-4" />
+                <Trash className="h-6 w-6" />
               </Button>
             </div>
             <div className="flex items-center justify-center">
@@ -98,7 +98,7 @@ export default function DataCentersPage() {
             </div>
             <div className="">
               <div className="items-center justify-center flex flex-col gap-y-2">
-                <CardTitle className="text-xl font-semibold text-center">
+                <CardTitle className="text-2xl font-semibold text-center">
                   {center.projectName}
                 </CardTitle>
                 <Badge
@@ -112,13 +112,13 @@ export default function DataCentersPage() {
                 </Badge>
               </div>
               <CardContent className="mt-2 space-y-1 p-0">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   📍 Location: {center.country}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   💰 Budget: ${center.budget?.toLocaleString?.() ?? "N/A"}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   ⚡ Energy Production:{" "}
                   {center.energyProduction?.toLocaleString?.() ?? "N/A"} kW
                 </p>
@@ -126,27 +126,32 @@ export default function DataCentersPage() {
             </div>
             <CardFooter className="flex justify-center mt-4 gap-x-4">
               <Button
+                size="lg"
                 onClick={() =>
                   router.push(`/data-centers/sandbox/${center._id?.$oid}`)
                 }
               >
+                <HousePlug className="mr-2 w-5 h-5" />
                 Sandbox
               </Button>
               <Button
+                size="lg"
                 onClick={() =>
                   router.push(`/data-centers/simulator/${center._id?.$oid}`)
                 }
               >
+                <span className="mr-2 text-lg">🧪</span>
                 Simulator
               </Button>
-              {/*if data center is disconetec inable the button to monitor */}
               <Button
+                size="lg"
                 onClick={() =>
                   router.push(`/data-centers/monitor/${center._id?.$oid}`)
                 }
                 disabled={center.status === "Inactive"}
                 variant="outline"
               >
+                <span className="mr-2 text-lg">📊</span>
                 Monitor
               </Button>
             </CardFooter>

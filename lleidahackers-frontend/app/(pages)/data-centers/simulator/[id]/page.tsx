@@ -5,14 +5,13 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
+import { Sun, Volume2, Thermometer, Droplets, Wind, Map, Save, RotateCcw, Zap, Droplet, Plug } from "lucide-react";
 import {
-  Sun,
-  Volume2,
-  Thermometer,
-  Droplets,
-  Wind,
-} from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 const center = { lat: 41.6176, lng: 0.62 }; // Ejemplo: Lleida
 const mapContainerStyle = {
@@ -134,19 +133,22 @@ export default function SimulatorPage() {
   const handleMouseUp = () => {
     setDraggingId(null);
   };
-    const params = useParams();
-  
+  const params = useParams();
+
   const dataCenterId = params?.id as string;
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_UR}/sat_solver/save/${dataCenterId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ blocks }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_UR}/sat_solver/save/${dataCenterId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ blocks }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to save layout");
 
@@ -220,16 +222,17 @@ export default function SimulatorPage() {
     status: "ok",
   }));
 
-  const edges = scadaData.flatMap((mod) =>
-    mod.connectedIn?.map((sourceId) => ({
-      sourceId,
-      targetId: mod.id,
-      status: "ok",
-      label: Object.values(mod.current_inputs)
-        .filter((v) => typeof v === "number")
-        .map((v) => `${v}`)
-        .join(" / "),
-    })) ?? []
+  const edges = scadaData.flatMap(
+    (mod) =>
+      mod.connectedIn?.map((sourceId) => ({
+        sourceId,
+        targetId: mod.id,
+        status: "ok",
+        label: Object.values(mod.current_inputs)
+          .filter((v) => typeof v === "number")
+          .map((v) => `${v}`)
+          .join(" / "),
+      })) ?? []
   );
 
   const mqttTopics = modules.map((mod) => ({
@@ -237,7 +240,7 @@ export default function SimulatorPage() {
     status: "OK",
   }));
 
-    return (
+  return (
     <div className="flex flex-col h-screen p-8 w-full">
       <h1 className="text-2xl font-bold text-center">SIMULATING PAGE</h1>
       <Tabs defaultValue="overview" className="flex-1 flex flex-col">
@@ -249,16 +252,29 @@ export default function SimulatorPage() {
           <div className="flex justify-center mt-4 space-x-4">
             <Button
               variant="default"
+              className="text-lg py-3 px-6 rounded-md flex items-center"
               onClick={() =>
                 setMapType(mapType === "satellite" ? "roadmap" : "satellite")
               }
             >
-              Switch to {mapType === "satellite" ? "Street View" : "Satellite View"}
+              <Map className="w-5 h-5 mr-2" />
+              Switch to{" "}
+              {mapType === "satellite" ? "Street View" : "Satellite View"}
             </Button>
-            <Button variant="secondary" onClick={handleSave}>
+            <Button
+              variant="secondary"
+              className="text-lg py-3 px-6 rounded-md flex items-center"
+              onClick={handleSave}
+            >
+              <Save className="w-5 h-5 mr-2" />
               Save Layout
             </Button>
-            <Button variant="destructive" onClick={handleReset}>
+            <Button
+              variant="destructive"
+              className="text-lg py-3 px-6 rounded-md flex items-center"
+              onClick={handleReset}
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
               Reset Layout
             </Button>
           </div>
@@ -304,7 +320,7 @@ export default function SimulatorPage() {
                     {blocks.map((block) => (
                       <div
                         key={block.id}
-                        className="absolute text-white text-xs flex items-center justify-center rounded shadow cursor-move"
+                        className="absolute text-white text-sm flex items-center justify-center rounded shadow cursor-move"
                         style={{
                           top: block.position.y,
                           left: block.position.x,
@@ -327,47 +343,49 @@ export default function SimulatorPage() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto w-full">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Sun className="w-5 h-5 text-yellow-500" />
                   Solar Irradiance
                 </CardTitle>
-                <CardDescription>5.4 kWh/m²/day (estimated average)</CardDescription>
+                <CardDescription className="text-lg">
+                  5.4 kWh/m²/day (estimated average)
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Volume2 className="w-5 h-5 text-blue-500" />
                   Ambient Noise Level
                 </CardTitle>
-                <CardDescription>42 dB (rural/suburban zone)</CardDescription>
+                <CardDescription className="text-lg">42 dB (rural/suburban zone)</CardDescription>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Thermometer className="w-5 h-5 text-red-500" />
                   Temperature
                 </CardTitle>
-                <CardDescription>22°C average</CardDescription>
+                <CardDescription className="text-lg">22°C average</CardDescription>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Droplets className="w-5 h-5 text-cyan-500" />
                   Humidity
                 </CardTitle>
-                <CardDescription>55%</CardDescription>
+                <CardDescription className="text-lg">55%</CardDescription>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Wind className="w-5 h-5 text-indigo-500" />
                   Wind Availability
                 </CardTitle>
-                <CardDescription>Moderate (10 km/h average)</CardDescription>
+                <CardDescription className="text-lg">Moderate (10 km/h average)</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -376,26 +394,26 @@ export default function SimulatorPage() {
           <div className="flex justify-center gap-4 mt-4 mb-6">
             <Button
               variant="destructive"
-              className="flex gap-2 items-center"
+              className="flex gap-2 items-center text-lg py-3 px-6 rounded-md"
               onClick={() => toast.error("⚡ Low Voltage Drop triggered")}
             >
-              <Sun className="w-5 h-5" />
+              <Zap className="w-5 h-5" />
               Low Voltage Drop
             </Button>
             <Button
               variant="secondary"
-              className="flex gap-2 items-center"
+              className="flex gap-2 items-center text-lg py-3 px-6 rounded-md"
               onClick={() => toast.warning("🚱 Water Shortage triggered")}
             >
-              <Droplets className="w-5 h-5" />
+              <Droplet className="w-5 h-5" />
               Water Shortage
             </Button>
             <Button
               variant="default"
-              className="flex gap-2 items-center"
+              className="flex gap-2 items-center text-lg py-3 px-6 rounded-md"
               onClick={() => toast("🔌 Transformer Failure triggered")}
             >
-              <Wind className="w-5 h-5" />
+              <Plug className="w-5 h-5" />
               Transformer Failure
             </Button>
           </div>
@@ -414,7 +432,7 @@ export default function SimulatorPage() {
                     alt={el.name}
                     className="w-20 drop-shadow-md"
                   />
-                  <span className="text-white text-xs mt-1">{el.name}</span>
+                  <span className="text-white text-sm mt-1">{el.name}</span>
                 </div>
               ))}
               {/* Animated connection lines */}
@@ -427,7 +445,10 @@ export default function SimulatorPage() {
                     <stop offset="0%" stopColor="#facc15" />
                     <stop offset="100%" stopColor="#fcd34d" />
                   </linearGradient>
-                  <linearGradient id="water-flow" gradientTransform="rotate(90)">
+                  <linearGradient
+                    id="water-flow"
+                    gradientTransform="rotate(90)"
+                  >
                     <stop offset="0%" stopColor="#38bdf8" />
                     <stop offset="100%" stopColor="#0ea5e9" />
                   </linearGradient>
@@ -454,7 +475,8 @@ export default function SimulatorPage() {
                   </style>
                 </defs>
                 {edges.map((edge, idx) => {
-                  const getModuleById = (id: string) => modules.find((m) => m.id === id);
+                  const getModuleById = (id: string) =>
+                    modules.find((m) => m.id === id);
                   const src = getModuleById(edge.sourceId);
                   const tgt = getModuleById(edge.targetId);
                   if (!src || !tgt) return null;
@@ -505,25 +527,25 @@ export default function SimulatorPage() {
             </div>
             <Card className="w-96 h-[800px] overflow-auto">
               <CardHeader>
-                <CardTitle>Simulation Log</CardTitle>
-                <CardDescription>Latest warnings and errors</CardDescription>
+                <CardTitle className="text-2xl">Simulation Log</CardTitle>
+                <CardDescription className="text-lg">Latest warnings and errors</CardDescription>
               </CardHeader>
               <div className="p-4 space-y-2">
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-sm">
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-base">
                   ⚠️ Solar input too low
                 </div>
-                <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-2 rounded text-sm">
+                <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-2 rounded text-base">
                   ❌ Battery failure
                 </div>
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-sm">
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-base">
                   ⚠️ Cooling efficiency reduced
                 </div>
               </div>
             </Card>
           </div>
           {/* MQTT Topics Status below the flex row */}
-          <div className="w-full max-w-6xl mx-auto bg-muted p-4 rounded border text-sm text-foreground mt-6">
-            <h4 className="font-semibold mb-2">MQTT Topics Status</h4>
+          <div className="w-full max-w-6xl mx-auto bg-muted p-4 rounded border text-base text-foreground mt-6">
+            <h4 className="font-semibold mb-2 text-xl">MQTT Topics Status</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {mqttTopics.map(({ topic, status }) => (
                 <div

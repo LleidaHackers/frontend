@@ -18,9 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
-const chartData = [
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-]
 
 const chartConfig = {
   visitors: {
@@ -32,7 +29,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function Component() {
+export function Component({ data = [{ label: "Visitors", visitors: 200, fill: "var(--color-safari)" }] }) {
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
@@ -45,7 +42,7 @@ export function Component() {
           className="mx-auto aspect-square max-h-[250px]"
         >
           <RadialBarChart
-            data={chartData}
+            data={data}
             startAngle={0}
             endAngle={250}
             innerRadius={80}
@@ -75,7 +72,7 @@ export function Component() {
                           y={viewBox.cy}
                           className="fill-foreground text-4xl font-bold"
                         >
-                          {chartData[0].visitors.toLocaleString()}
+                          {data[0].visitors.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}

@@ -421,26 +421,6 @@ function FlowCanvas() {
       }
 
 
-      // Verificar si el target ya tiene ese input conectado
-      const targetInputsConnected = edges.filter(
-        (e) =>
-          e.target === targetNode.id &&
-          e.targetHandle?.split("-")[0] === targetHandle
-      ).length;
-
-      const targetExpectedInputs = targetNode.data?.inputs?.filter(
-        (i) => i === targetHandle
-      ).length;
-
-      if (
-        targetExpectedInputs !== undefined &&
-        targetInputsConnected >= targetExpectedInputs
-      ) {
-        toast.error(
-          `Input ${targetHandle} on ${targetNode.id} is already fully connected`
-        );
-        return;
-      }
 
       setEdges((eds) =>
         addEdge(
