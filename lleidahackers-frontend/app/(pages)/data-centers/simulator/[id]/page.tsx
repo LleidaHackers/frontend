@@ -457,7 +457,10 @@ export default function SimulatorPage() {
                         }}
                         onMouseDown={handleMouseDown(block.id)}
                       >
-                        {(block.name ?? block.type).split("_")[0]}
+                        {(block.name ?? block.type)
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")}
                       </div>
                     ))}
                   </div>
