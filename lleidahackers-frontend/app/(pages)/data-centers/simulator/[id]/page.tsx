@@ -358,29 +358,19 @@ export default function SimulatorPage() {
     setLogItems([]);
   }, [backendModules.length]);
 
-  // MQTT topics state
-  const [mqttTopics, setMqttTopics] = useState(
-    modules.map((mod) => ({
-      topic: `topic/${mod.id}`,
-      status: "OK",
-    }))
-  );
+  const mqttTopics = Array.isArray(modules)
+    ? modules.map((mod) => ({
+        topic: `topic/${mod.id}`,
+        status: "OK",
+      }))
+    : [];
 
   // Handler for Low Voltage Drop simulation
   const handleLowVoltageDrop = () => {
     toast.error("⚡ Low Voltage Drop triggered");
 
-    // Elimina progresivamente líneas aleatorias
-    const interval = setInterval(() => {
-      setEdges((prev) => {
-        if (prev.length === 0) {
-          clearInterval(interval);
-          return [];
-        }
-        const idxToRemove = Math.floor(Math.random() * prev.length);
-        return prev.filter((_, idx) => idx !== idxToRemove);
-      });
-    }, 300);
+    // Elimina completamente la primera línea (índice 0)
+    setEdges((prev) => prev.filter((_, idx) => idx !== 0));
 
     // Progressive error logs (accumulate in Simulation Log card)
     setTimeout(() => {
@@ -405,12 +395,6 @@ export default function SimulatorPage() {
         })
       );
       setLogItems((prev) => [...prev, "✅ Power rerouted successfully"]);
-      // MQTT topics OFF after reroute
-      setTimeout(() => {
-        setMqttTopics((prev) =>
-          prev.map((t) => ({ ...t, status: "OFF" }))
-        );
-      }, 5000);
     }, 4000);
   };
 
@@ -622,28 +606,17 @@ export default function SimulatorPage() {
 
                 // Desvanecer conexiones aleatoriamente después del fallo
                 setTimeout(() => {
-                  const interval = setInterval(() => {
-                    setEdges((prev) => {
-                      if (prev.length <= 1) {
-                        clearInterval(interval);
-                        return [];
-                      }
-                      const idxToRemove = Math.floor(Math.random() * prev.length);
-                      return prev.filter((_, idx) => idx !== idxToRemove);
-                    });
-                  }, 300);
-                }, 7000);
-
-                // MQTT topics OFF for affected modules after failure
-                setTimeout(() => {
-                  setMqttTopics((prev) =>
-                    prev.map((t, i) =>
-                      affectedModules.some((mod) => `topic/${mod.id}` === t.topic)
-                        ? { ...t, status: "OFF" }
-                        : t
-                    )
-                  );
-                }, 8000);
+  const interval = setInterval(() => {
+    setEdges((prev) => {
+      if (prev.length <= 1) {
+        clearInterval(interval);
+        return [];
+      }
+      const idxToRemove = Math.floor(Math.random() * prev.length);
+      return prev.filter((_, idx) => idx !== idxToRemove);
+    });
+  }, 300);
+}, 7000);
               }}
             >
               <Plug className="w-5 h-5" />
