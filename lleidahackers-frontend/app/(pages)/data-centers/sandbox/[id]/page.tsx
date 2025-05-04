@@ -556,6 +556,7 @@ function FlowCanvas() {
   };
   const [hasAppliedAI, setHasAppliedAI] = useState(false);
   const [buttonText, setButtonText] = useState("🤖 Autocomplete with AI");
+  const [optimizeLoading, setOptimizeLoading] = useState(false);
   useEffect(() => {
     if (dataCenterId) {
       loadWorkflow();
@@ -818,12 +819,25 @@ function FlowCanvas() {
 
               <Button
                 className="bg-green-500 hover:bg-green-600 text-white h-12 text-base px-5"
-                onClick={() =>
-                  Router.push(`/data-centers/simulator/${dataCenterId}`)
-                }
+                disabled={optimizeLoading}
+                onClick={() => {
+                  setOptimizeLoading(true);
+                  setTimeout(() => {
+                    Router.push(`/data-centers/simulator/${dataCenterId}`);
+                  }, 2000);
+                }}
               >
-                <Hammer className="w-4 h-4" />
-                Go to Simulation
+                {optimizeLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Optimizing...
+                  </>
+                ) : (
+                  <>
+                    <Hammer className="w-4 h-4" />
+                    Optimize
+                  </>
+                )}
               </Button>
             </div>
             <div className="flex items-center space-x-2">
