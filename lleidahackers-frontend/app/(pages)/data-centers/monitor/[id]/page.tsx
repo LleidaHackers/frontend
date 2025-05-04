@@ -8,6 +8,7 @@ import { Component as BarChartComponent } from "@/components/charts/BarChart";
 import { Component as LineChartComponent } from "@/components/charts/LineChart";
 import { Component as RadialChartComponent } from "@/components/charts/RadialChart";
 import { Component as RadarChartComponent } from "@/components/charts/RadarChart";
+import { Component as TemperatureHumidityChart } from "@/components/charts/TemperatureHumidity";
 import {
   Bolt,
   Droplet,
@@ -240,6 +241,7 @@ export default function Page() {
               <RadarChartComponent data={dummyData.radar} />
               <RadialChartComponent data={dummyData.radial} />
             </div>
+            <TemperatureHumidityChart />
           </TabsContent>
 
           <TabsContent value="logs">
