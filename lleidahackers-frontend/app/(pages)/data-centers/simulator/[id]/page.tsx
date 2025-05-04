@@ -452,7 +452,7 @@ export default function SimulatorPage() {
                           left: block.position.x,
                           width: block.dimensions.width,
                           height: block.dimensions.height,
-                          backgroundColor: `#${block.color}`,
+                          backgroundColor: `#${block.color}99`,
                           border: "2px solid #000",
                         }}
                         onMouseDown={handleMouseDown(block.id)}
