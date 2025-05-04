@@ -37,7 +37,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function Component() {
+export function Component({ data = chartData }: { data?: typeof chartData }) {
   return (
     <Card>
       <CardHeader>
@@ -46,7 +46,7 @@ export function Component() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
+          <BarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
@@ -59,8 +59,8 @@ export function Component() {
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+            <Bar dataKey="desktop" fill="#4c6ef5" radius={4} />
+            <Bar dataKey="mobile" fill="#15aabf" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>

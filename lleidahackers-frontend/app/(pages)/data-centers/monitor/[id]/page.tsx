@@ -35,6 +35,12 @@ const dummyData = {
     { month: "Apr", power: 180, temperature: 30 },
     { month: "May", power: 140, temperature: 28 },
     { month: "Jun", power: 150, temperature: 27 },
+    { month: "Jul", power: 165, temperature: 31 },
+    { month: "Aug", power: 175, temperature: 32 },
+    { month: "Sep", power: 160, temperature: 30 },
+    { month: "Oct", power: 145, temperature: 27 },
+    { month: "Nov", power: 130, temperature: 26 },
+    { month: "Dec", power: 125, temperature: 25 },
   ],
   bar: [
     { month: "Jan", gpu: 76, cpu: 48 },
@@ -43,6 +49,12 @@ const dummyData = {
     { month: "Apr", gpu: 88, cpu: 58 },
     { month: "May", gpu: 82, cpu: 55 },
     { month: "Jun", gpu: 84, cpu: 57 },
+    { month: "Jul", gpu: 90, cpu: 60 },
+    { month: "Aug", gpu: 92, cpu: 62 },
+    { month: "Sep", gpu: 88, cpu: 59 },
+    { month: "Oct", gpu: 80, cpu: 54 },
+    { month: "Nov", gpu: 75, cpu: 50 },
+    { month: "Dec", gpu: 70, cpu: 48 },
   ],
   radar: [
     { metric: "Power", value: 85 },
@@ -50,9 +62,12 @@ const dummyData = {
     { metric: "Network", value: 60 },
     { metric: "Storage", value: 90 },
     { metric: "Processing", value: 78 },
+    { metric: "Security", value: 70 },
   ],
   radial: [
     { label: "Visitors", visitors: 1293, fill: "#4c6ef5" },
+    { label: "Incidents", visitors: 45, fill: "#f03e3e" },
+    { label: "Optimizations", visitors: 289, fill: "#37b24d" },
   ],
 };
 

@@ -49,7 +49,7 @@ export function Component({ data }: RadarChartProps) {
             <PolarGrid />
             <Radar
               dataKey="value"
-              fill="var(--color-desktop)"
+              fill="#4c6ef5"
               fillOpacity={0.6}
             />
           </RadarChart>

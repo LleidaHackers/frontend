@@ -66,14 +66,14 @@ export function Component({ data = chartData }: { data?: typeof chartData }) {
             <Line
               dataKey="desktop"
               type="monotone"
-              stroke="var(--color-desktop)"
+              stroke="#4c6ef5"
               strokeWidth={2}
               dot={false}
             />
             <Line
               dataKey="mobile"
               type="monotone"
-              stroke="var(--color-mobile)"
+              stroke="#15aabf"
               strokeWidth={2}
               dot={false}
             />

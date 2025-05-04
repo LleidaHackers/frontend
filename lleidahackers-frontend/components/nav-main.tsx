@@ -36,7 +36,7 @@ export function NavMain({
               <span>Create new Center</span>
             </SidebarMenuButton>
           </SidebarMenuItem> */}
-          <ModeToggle />
+          {/* <ModeToggle /> */}
         </SidebarMenu>
         <SidebarMenu >
           {items.map((item) => (
