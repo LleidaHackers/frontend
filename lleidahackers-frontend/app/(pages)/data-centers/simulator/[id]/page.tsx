@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
@@ -137,10 +137,29 @@ export default function SimulatorPage() {
 
   const dataCenterId = params?.id as string;
 
+  // Backend modules state
+  const [backendModules, setBackendModules] = useState([]);
+
+  useEffect(() => {
+    async function loadInfrastructure() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/build/build/${dataCenterId}`
+        );
+        const json = await res.json();
+        setBackendModules(json);
+      } catch (err) {
+        console.error("Failed to load infrastructure", err);
+      }
+    }
+
+    loadInfrastructure();
+  }, [dataCenterId]);
+
   const handleSave = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_UR}/sat_solver/save/${dataCenterId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/sat_solver/save/${dataCenterId}`,
         {
           method: "POST",
           headers: {
@@ -169,71 +188,71 @@ export default function SimulatorPage() {
     "topic/wind": "OK",
   };
 
-  // --- SCADA backend-like data (replace with backend call when available) ---
-  const scadaData = [
-    {
-      id: "solar",
-      name: "Solar_Panel",
-      posX: 50,
-      posY: 100,
-      connectedIn: [],
-      current_inputs: {},
-    },
-    {
-      id: "datacenter",
-      name: "Data_Center",
-      posX: 300,
-      posY: 200,
-      connectedIn: ["solar", "battery"],
-      current_inputs: { power: 120, water: 80 },
-    },
-    {
-      id: "battery",
-      name: "Battery",
-      posX: 550,
-      posY: 100,
-      connectedIn: ["datacenter"],
-      current_inputs: { power: 60 },
-    },
-    {
-      id: "wind",
-      name: "Wind_Mill",
-      posX: 100,
-      posY: 400,
-      connectedIn: ["solar"],
-      current_inputs: { power: 60 },
-    },
-    {
-      id: "cooling",
-      name: "Water_Cooling",
-      posX: 500,
-      posY: 400,
-      connectedIn: ["datacenter"],
-      current_inputs: { water: 50 },
-    },
-  ];
+  // Manual image mapping for module types
+  const imageMap: Record<string, string> = {
+    transformer: "transformator",
+    water_treatment: "water-treatment",
+    water_chiller: "water-cooling",
+    water_supply: "solarwater-treatment",
+    server_rack: "data-center",
+    data_rack: "data-center",
+    network_rack: "line_trasnpor",
+    wind: "wind_mill",
+    solar: "solar",
+    nuclear: "nuclear",
+    battery: "battery",
+  };
+  // Agrupación visual de módulos por tipo
+  const groupOffsets: Record<string, { x: number; y: number }> = {
+    Transformer: { x: 100, y: 100 },
+    Water: { x: 400, y: 100 },
+    Server: { x: 100, y: 400 },
+    Data: { x: 400, y: 400 },
+    Network: { x: 700, y: 400 },
+    Unknown: { x: 700, y: 100 },
+  };
 
-  const modules = scadaData.map((mod) => ({
-    id: mod.id,
-    name: mod.name.replaceAll("_", " "),
-    x: mod.posX,
-    y: mod.posY,
-    image: `/assets/isometric_images/${mod.name.toLowerCase()}.png`,
-    status: "ok",
-  }));
+  // Use backendModules instead of scadaData
+  const modules = backendModules.map((mod) => {
+    const baseName = mod.name?.split("_")[0]?.toLowerCase() || "default";
+    const imageKey = Object.keys(imageMap).find((key) =>
+      mod.name?.toLowerCase().includes(key)
+    );
+    return {
+      id: mod.id,
+      name: mod.name?.replaceAll("_", " ") ?? "Unknown",
+      x: mod.posX ?? 0,
+      y: mod.posY ?? 0,
+      image: `/assets/isometric_images/${imageMap[imageKey ?? baseName] || "default"}.png`,
+      status: "ok",
+    };
+  });
 
-  const edges = scadaData.flatMap(
-    (mod) =>
+  const edges = backendModules.flatMap((mod) => {
+    const inEdges =
       mod.connectedIn?.map((sourceId) => ({
         sourceId,
         targetId: mod.id,
         status: "ok",
-        label: Object.values(mod.current_inputs)
+        label: Object.values(mod.current_inputs || {})
           .filter((v) => typeof v === "number")
           .map((v) => `${v}`)
           .join(" / "),
-      })) ?? []
-  );
+      })) ?? [];
+
+    const outEdges =
+      mod.connectedOut?.map((targetId) => ({
+        sourceId: mod.id,
+        targetId,
+        status: "ok",
+        label: Object.values(mod.current_outputs || {})
+          .filter((v) => typeof v === "number")
+          .map((v) => `${v}`)
+          .join(" / "),
+      })) ?? [];
+
+    return [...inEdges, ...outEdges];
+  });
 
   const mqttTopics = modules.map((mod) => ({
     topic: `topic/${mod.id}`,
@@ -421,22 +440,31 @@ export default function SimulatorPage() {
           <div className="flex justify-center gap-4 mt-4 mb-6">
             <div className="relative bg-[#0d1b2a] w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-700">
               {/* Render modules */}
-              {modules.map((el) => (
-                <div
-                  key={el.id}
-                  className="absolute flex flex-col items-center"
-                  style={{ left: el.x, top: el.y }}
-                >
-                  <img
-                    src={el.image}
-                    alt={el.name}
-                    className="w-20 drop-shadow-md"
-                  />
-                  <span className="text-white text-sm mt-1">{el.name}</span>
-                </div>
-              ))}
+              {modules.map((el, idx) => {
+                const type = el.name.split(" ")[0];
+                const groupIndex = modules.filter((m) => m.name.startsWith(type)).indexOf(el);
+                const xOffset = groupOffsets[type]?.x || 0;
+                const yOffset = groupOffsets[type]?.y || 0;
+                return (
+                  <div
+                    key={el.id}
+                    className="absolute flex flex-col items-center z-10"
+                    style={{
+                      left: el.x === 0 ? xOffset + (groupIndex % 2) * 160 : el.x,
+                      top: el.y === 0 ? yOffset + Math.floor(groupIndex / 2) * 160 : el.y,
+                    }}
+                  >
+                    <img
+                      src={el.image}
+                      alt={el.name}
+                      className="w-20 drop-shadow-md"
+                    />
+                    <span className="text-white text-sm mt-1">{el.name}</span>
+                  </div>
+                );
+              })}
               {/* Animated connection lines */}
-              <svg className="absolute w-full h-full pointer-events-none">
+              <svg className="absolute w-full h-full pointer-events-none z-0">
                 <defs>
                   <linearGradient
                     id="electric-flow"
@@ -480,11 +508,19 @@ export default function SimulatorPage() {
                   const src = getModuleById(edge.sourceId);
                   const tgt = getModuleById(edge.targetId);
                   if (!src || !tgt) return null;
-                  // Calculate center points of modules (offset image size/2 for better appearance)
-                  const x1 = src.x + 40;
-                  const y1 = src.y + 40;
-                  const x2 = tgt.x + 40;
-                  const y2 = tgt.y + 40;
+                  // Posiciones agrupadas por tipo
+                  const srcType = src.name.split(" ")[0];
+                  const srcGroupIndex = modules.filter((m) => m.name.startsWith(srcType)).indexOf(src);
+                  const srcXOffset = groupOffsets[srcType]?.x || 0;
+                  const srcYOffset = groupOffsets[srcType]?.y || 0;
+                  const x1 = src.x === 0 ? srcXOffset + (srcGroupIndex % 2) * 160 + 40 : src.x + 40;
+                  const y1 = src.y === 0 ? srcYOffset + Math.floor(srcGroupIndex / 2) * 160 + 40 : src.y + 40;
+                  const tgtType = tgt.name.split(" ")[0];
+                  const tgtGroupIndex = modules.filter((m) => m.name.startsWith(tgtType)).indexOf(tgt);
+                  const tgtXOffset = groupOffsets[tgtType]?.x || 0;
+                  const tgtYOffset = groupOffsets[tgtType]?.y || 0;
+                  const x2 = tgt.x === 0 ? tgtXOffset + (tgtGroupIndex % 2) * 160 + 40 : tgt.x + 40;
+                  const y2 = tgt.y === 0 ? tgtYOffset + Math.floor(tgtGroupIndex / 2) * 160 + 40 : tgt.y + 40;
                   // Pick gradient for demonstration
                   const isWater = edge.label?.includes("m³");
                   const stroke =
@@ -495,18 +531,18 @@ export default function SimulatorPage() {
                       : edge.status === "warning"
                       ? "orange"
                       : "red";
-                  // Label position, simple midpoint
-                  const labelX = (x1 + x2) / 2;
+                  // Polyline points: from source center to (x1, y2) then to target
+                  // This makes a right-angle path (rectangular)
+                  // Label position: mid of the elbow
+                  const labelX = x1;
                   const labelY = (y1 + y2) / 2 - 5;
                   return (
                     <g key={idx}>
-                      <line
-                        x1={x1}
-                        y1={y1}
-                        x2={x2}
-                        y2={y2}
+                      <polyline
+                        points={`${x1},${y1} ${x1},${y2} ${x2},${y2}`}
                         stroke={stroke}
                         strokeWidth="3"
+                        fill="none"
                         className="flow-line"
                       />
                       {edge.label && (
