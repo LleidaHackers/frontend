@@ -1,14 +1,23 @@
+"use client";
+import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Component as BarChartComponent } from "@/components/charts/BarChart";
 import { Component as LineChartComponent } from "@/components/charts/LineChart";
 import { Component as RadialChartComponent } from "@/components/charts/RadialChart";
 import { Component as RadarChartComponent } from "@/components/charts/RadarChart";
 import { Component as TemperatureHumidityChart } from "@/components/charts/TemperatureHumidity";
+import { Component as PieChartComponent } from "@/components/charts/PieChart";
 import {
   Bolt,
   Droplet,
@@ -23,7 +32,7 @@ import {
   AlarmSmoke,
   BatteryFull,
   Wifi,
-  Gauge
+  Gauge,
 } from "lucide-react";
 import data from "./data.json";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,6 +82,15 @@ const dummyData = {
 };
 
 export default function Page() {
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/dashboard/get-plant-data/1`)
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch((err) => console.error("Failed to fetch stats:", err));
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
       <div className="px-4 lg:px-6">
@@ -80,7 +98,9 @@ export default function Page() {
           <h2 className="text-3xl font-bold flex items-center gap-2">
             <Gauge className="w-6 h-6" /> Data Center Monitoring
           </h2>
-          <p className="text-lg text-muted-foreground">Realtime overview of key metrics and trends</p>
+          <p className="text-lg text-muted-foreground">
+            Realtime overview of key metrics and trends
+          </p>
         </div>
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="flex justify-center gap-4">
@@ -99,7 +119,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Current usage in MW</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-green-600">120 MW</CardContent>
+                <CardContent className="text-4xl font-bold text-green-600">
+                  {stats ? `${stats.power_usage} MW` : "Loading..."}
+                </CardContent>
               </Card>
               <Card>
                 <CardHeader>
@@ -109,7 +131,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Fresh water consumption</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-blue-500">500 L/min</CardContent>
+                <CardContent className="text-4xl font-bold text-blue-500">
+                  {stats ? `${stats.water_flow} L/min` : "Loading..."}
+                </CardContent>
               </Card>
               <Card>
                 <CardHeader>
@@ -119,7 +143,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Internal temperature</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-red-500">27°C</CardContent>
+                <CardContent className="text-4xl font-bold text-red-500">
+                  {stats ? `${stats.internal_temperature}°C` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -130,7 +156,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Avg usage across servers</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-purple-600">76%</CardContent>
+                <CardContent className="text-4xl font-bold text-purple-600">
+                  {stats ? `${stats.gpu_utilization}%` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -141,7 +169,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Core avg last minute</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-orange-500">42%</CardContent>
+                <CardContent className="text-4xl font-bold text-orange-500">
+                  {stats ? `${stats.cpu_load}%` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -152,7 +182,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Current internal humidity</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-cyan-600">58%</CardContent>
+                <CardContent className="text-4xl font-bold text-cyan-600">
+                  {stats ? `${stats.humidity_level}%` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -163,7 +195,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Server room pressure</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-teal-600">1.03 atm</CardContent>
+                <CardContent className="text-4xl font-bold text-teal-600">
+                  {stats ? `${stats.air_pressure} hPa` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -174,7 +208,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Average fan rotation</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-amber-500">3400 RPM</CardContent>
+                <CardContent className="text-4xl font-bold text-amber-500">
+                  {stats ? `${stats.fan_speed} RPM` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -185,7 +221,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Storage system throughput</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-gray-700">380 MB/s</CardContent>
+                <CardContent className="text-4xl font-bold text-gray-700">
+                  {stats ? `${stats.disk} MB/s` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -196,7 +234,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Air quality indicator</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-lime-600">412 ppm</CardContent>
+                <CardContent className="text-4xl font-bold text-lime-600">
+                  {stats ? `${stats.co2} ppm` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -207,7 +247,13 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Status of alarm system</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-green-600">✅ Normal</CardContent>
+                <CardContent className="text-4xl font-bold text-green-600">
+                  {stats
+                    ? stats.fire_alarm
+                      ? "✅ Normal"
+                      : "🚨 Alert"
+                    : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -218,7 +264,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Current charge level</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-blue-600">89%</CardContent>
+                <CardContent className="text-4xl font-bold text-blue-600">
+                  {stats ? `${stats.ups_battery}%` : "Loading..."}
+                </CardContent>
               </Card>
 
               <Card>
@@ -229,7 +277,9 @@ export default function Page() {
                   </CardTitle>
                   <CardDescription>Average network usage</CardDescription>
                 </CardHeader>
-                <CardContent className="text-4xl font-bold text-indigo-600">780 Mbps</CardContent>
+                <CardContent className="text-4xl font-bold text-indigo-600">
+                  {stats ? `${stats.bandwidth} Mbps` : "Loading..."}
+                </CardContent>
               </Card>
             </div>
           </TabsContent>
@@ -240,6 +290,7 @@ export default function Page() {
               <BarChartComponent data={dummyData.bar} />
               <RadarChartComponent data={dummyData.radar} />
               <RadialChartComponent data={dummyData.radial} />
+              <PieChartComponent />
             </div>
             <TemperatureHumidityChart />
           </TabsContent>
@@ -252,9 +303,15 @@ export default function Page() {
                   <CardDescription>Recent system messages</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="text-yellow-600 font-medium">⚠️ Cooling system operating near limit.</div>
-                  <div className="text-red-600 font-medium">❌ Power surge detected on grid connection.</div>
-                  <div className="text-green-600">✅ All systems nominal as of 10:45 AM.</div>
+                  <div className="text-yellow-600 font-medium">
+                    ⚠️ Cooling system operating near limit.
+                  </div>
+                  <div className="text-red-600 font-medium">
+                    ❌ Power surge detected on grid connection.
+                  </div>
+                  <div className="text-green-600">
+                    ✅ All systems nominal as of 10:45 AM.
+                  </div>
                 </CardContent>
               </Card>
             </div>
