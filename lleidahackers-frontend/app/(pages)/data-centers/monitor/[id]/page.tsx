@@ -85,7 +85,7 @@ export default function Page() {
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/dashboard/get-plant-data/1`)
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/dashboard/get-plant-data`)
       .then((res) => res.json())
       .then((data) => setStats(data))
       .catch((err) => console.error("Failed to fetch stats:", err));

@@ -24,6 +24,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { log } from "console";
 
 const mapContainerStyle = {
   width: "1200px",
@@ -196,7 +197,8 @@ export default function SimulatorPage() {
     setDraggingId(null);
   };
   const params = useParams();
-
+  const [longitude, setLongitude] = useState(0);
+  const [latitude, setLatitude] = useState(0);
   const dataCenterId = params?.id as string;
   // Fetch data center coordinates when dataCenterId changes
   useEffect(() => {
@@ -208,6 +210,8 @@ export default function SimulatorPage() {
         const json = await res.json();
         const lat = parseFloat(json.latituid);
         const lng = parseFloat(json.longitud);
+        setLongitude(lng);
+        setLatitude(lat);
         if (!isNaN(lat) && !isNaN(lng)) {
           setCenterCoords({ lat, lng });
         }
@@ -347,7 +351,23 @@ export default function SimulatorPage() {
 
     return [...inEdges, ...outEdges];
   });
+  // State for weather data
+  const [weatherData, setWeatherData] = useState<{ temperature_c: number; humidity: number; wind_kph: number } | null>(null);
 
+  // Fetch weather data on mount
+  useEffect(() => {
+    async function fetchWeather() {
+      try {
+        console.log(latitude, longitude);
+        const res = await fetch(`http://100.99.171.16:8000/info/${39.107}/${-0.506}`);
+        const json = await res.json();
+        setWeatherData(json);
+      } catch (err) {
+        console.error("Failed to fetch weather data", err);
+      }
+    }
+    fetchWeather();
+  }, []);
   // Simulation state for edges and logs
   const [edges, setEdges] = useState(initialEdges);
   const [logItems, setLogItems] = useState<string[]>([]);
@@ -358,12 +378,18 @@ export default function SimulatorPage() {
     setLogItems([]);
   }, [backendModules.length]);
 
-  const mqttTopics = Array.isArray(modules)
-    ? modules.map((mod) => ({
-        topic: `topic/${mod.id}`,
-        status: "OK",
-      }))
-    : [];
+  const [mqttTopics, setMqttTopics] = useState<{ topic: string; status: string }[]>([]);
+  // Inicializa mqttTopics cuando modules cambie
+  useEffect(() => {
+    if (modules.length > 0) {
+      setMqttTopics(
+        modules.map((mod) => ({
+          topic: `topic/${mod.id}`,
+          status: "OK",
+        }))
+      );
+    }
+  }, [modules]);
 
   // Handler for Low Voltage Drop simulation
   const handleLowVoltageDrop = () => {
@@ -519,7 +545,7 @@ export default function SimulatorPage() {
                   Temperature
                 </CardTitle>
                 <CardDescription className="text-lg">
-                  22°C average
+                {weatherData ? `${weatherData.temperature_c}°C` : "Loading..."} average
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -529,7 +555,9 @@ export default function SimulatorPage() {
                   <Droplets className="w-5 h-5 text-cyan-500" />
                   Humidity
                 </CardTitle>
-                <CardDescription className="text-lg">55%</CardDescription>
+                <CardDescription className="text-lg">                <CardDescription className="text-lg">
+                  {weatherData ? `${weatherData.humidity}%` : "Loading..."}
+                </CardDescription></CardDescription>
               </CardHeader>
             </Card>
             <Card>
@@ -539,8 +567,7 @@ export default function SimulatorPage() {
                   Wind Availability
                 </CardTitle>
                 <CardDescription className="text-lg">
-                  Moderate (10 km/h average)
-                </CardDescription>
+                {weatherData ? `${weatherData.wind_kph} km/h` : "Loading..."}                </CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -604,19 +631,37 @@ export default function SimulatorPage() {
                   }, 1000 * (idx + 1));
                 });
 
+                // Apaga progresivamente los tópicos MQTT
+                setTimeout(() => {
+                  let i = 0;
+                  const topicInterval = setInterval(() => {
+                    setMqttTopics((prev) => {
+                      if (i >= prev.length) {
+                        clearInterval(topicInterval);
+                        return prev;
+                      }
+                      const updated = prev.map((topic, idx) =>
+                        idx === i ? { ...topic, status: "OFF" } : topic
+                      );
+                      i++;
+                      return updated;
+                    });
+                  }, 500);
+                }, 5000);
+
                 // Desvanecer conexiones aleatoriamente después del fallo
                 setTimeout(() => {
-  const interval = setInterval(() => {
-    setEdges((prev) => {
-      if (prev.length <= 1) {
-        clearInterval(interval);
-        return [];
-      }
-      const idxToRemove = Math.floor(Math.random() * prev.length);
-      return prev.filter((_, idx) => idx !== idxToRemove);
-    });
-  }, 300);
-}, 7000);
+                  const interval = setInterval(() => {
+                    setEdges((prev) => {
+                      if (prev.length <= 1) {
+                        clearInterval(interval);
+                        return [];
+                      }
+                      const idxToRemove = Math.floor(Math.random() * prev.length);
+                      return prev.filter((_, idx) => idx !== idxToRemove);
+                    });
+                  }, 300);
+                }, 7000);
               }}
             >
               <Plug className="w-5 h-5" />
