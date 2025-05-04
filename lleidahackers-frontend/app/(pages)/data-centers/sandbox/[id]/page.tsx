@@ -555,6 +555,7 @@ function FlowCanvas() {
     }
   };
   const [hasAppliedAI, setHasAppliedAI] = useState(false);
+  const [buttonText, setButtonText] = useState("🤖 Autocomplete with AI");
   useEffect(() => {
     if (dataCenterId) {
       loadWorkflow();
@@ -912,94 +913,82 @@ function FlowCanvas() {
                 <div className="flex gap-x-2">
                   {/* Autocomplete with AI button */}
                   <Button
-                    className="bg-blue-500 hover:bg-blue-600 text-white h-12 text-base px-5"
-                    onClick={() => {
-                      // Nodo y conexión de ejemplo
-                      const suggestedNodes: Node<CustomNodeData>[] = [
-                        {
-                          id: "auto-solar",
-                          type: "custom",
-                          position: { x: 100, y: 100 },
-                          data: {
-                            label: "☀️ Solar Auto\n($2000)",
-                            type: "source",
-                            power: 20,
-                            inputs: [],
-                            outputs: ["Usable_Power"],
-                            surface: 2,
-                          },
+                    className="bg-pink-500 hover:bg-pink-600 text-white h-12 text-base px-5"
+                    onClick={async () => {
+                      const statuses = [
+                        "Analyzing energy requirements...",
+                        "Checking water distribution...",
+                        "Evaluating cooling systems...",
+                        "Optimizing network layout...",
+                        "Calculating best module...",
+                        "Finalizing..."
+                      ];
+                      let current = 0;
+                      setButtonText(statuses[current]);
+                      const interval = setInterval(() => {
+                        current++;
+                        if (current < statuses.length) {
+                          setButtonText(statuses[current]);
+                        }
+                      }, 2000);
+
+                      try {
+                        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+                        const response = await fetch(`${backendUrl}/gemini`);
+                        const json = await response.json();
+                        const newNodes = Array.isArray(json.nodes) ? json.nodes : [];
+                        const newEdges = Array.isArray(json.edges) ? json.edges : [];
+
+                        const animatedNodes = newNodes.map((node: any) => ({
+                          ...node,
                           style: {
-                            borderRadius: 8,
-                            padding: 8,
-                            backgroundColor: "#ECFDF5",
-                            border: "1px solid #CBD5E1",
+                            ...(node.style || {}),
                             animation: "pulse 2s infinite",
                           },
-                        },
-                        {
-                          id: "auto-server",
-                          type: "custom",
-                          position: { x: 400, y: 100 },
-                          data: {
-                            label: "🖥️ Server Auto\n(Needs: 10W)",
-                            type: "sink",
-                            demand: 10,
-                            inputs: ["Usable_Power"],
-                            outputs: [],
-                            surface: 2,
-                          },
-                          style: {
-                            borderRadius: 8,
-                            padding: 8,
-                            backgroundColor: "#EEF2FF",
-                            border: "1px solid #CBD5E1",
-                            animation: "pulse 2s infinite",
-                          },
-                        },
-                      ];
+                        }));
 
-                      const suggestedEdges: Edge[] = [
-                        {
-                          id: "auto-edge-1",
-                          source: "auto-solar",
-                          target: "auto-server",
-                          sourceHandle: "Usable_Power-out",
-                          targetHandle: "Usable_Power-in",
-                          type: "custom",
-                          data: { label: "Usable_Power" },
-                        },
-                      ];
-
-                      setNodes((prev) => [...prev, ...suggestedNodes]);
-                      setEdges((prev) => [...prev, ...suggestedEdges]);
-                      setBudget((b) => b - 2000);
-                      setOccupiedSurface((s) => s + 4);
-                      setAccomulatePower((p) => p + 20);
-                      setConsumeUsage((c) => c + 10);
-
-                      toast.info(
-                        "Suggested layout loaded. Click 'Apply Suggestions' to keep it."
-                      );
+                        setTimeout(() => {
+                          clearInterval(interval);
+                          setNodes((prev) => [...prev, ...animatedNodes]);
+                          setEdges((prev) => [...prev, ...newEdges]);
+                          toast.success("Sugerencias añadidas. Pulsa 'Apply' para confirmar.");
+                          setButtonText("🤖 Autocomplete with AI");
+                        }, statuses.length * 1000 + 1000);
+                      } catch (err) {
+                        clearInterval(interval);
+                        console.error("Error fetching smart suggestion", err);
+                        toast.error("Error al obtener sugerencia inteligente");
+                        setButtonText("🤖 Autocomplete with AI");
+                      }
                     }}
                   >
-                    🤖 Autocomplete with AI
+                    <>
+                      {buttonText !== "🤖 Autocomplete with AI" && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {buttonText}
+                    </>
                   </Button>
 
+                  {/* Smart Suggest button */}
+                 
+
                   {/* Apply Suggestions button */}
-                  {nodes.some((n) => n.id.startsWith("auto-")) &&
+                  {nodes.some((n) => n.style?.animation) &&
                     !hasAppliedAI && (
                       <Button
                         className="bg-indigo-500 hover:bg-indigo-600 text-white h-12 text-base px-5"
                         onClick={() => {
                           setNodes((prev) =>
                             prev.map((node) =>
-                              node.id.startsWith("auto-")
+                              node.style?.animation
                                 ? {
                                     ...node,
                                     style: {
                                       ...node.style,
                                       animation: undefined,
                                     },
+                                    // Optionally mark as confirmed if needed
                                   }
                                 : node
                             )
