@@ -13,16 +13,18 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-const center = { lat: 41.6176, lng: 0.62 }; // Ejemplo: Lleida
 const mapContainerStyle = {
   width: "1200px",
   height: "800px",
 };
 
+// Default center, will be updated dynamically
+const defaultCenter = { lat: 41.6176, lng: 0.62 };
+
 const data = {
   grid: {
-    width: 100,
-    height: 500,
+    width: 500,
+    height: 300,
   },
   blocks: [
     {
@@ -104,6 +106,9 @@ export default function SimulatorPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("satellite");
 
+  // Center coordinates state
+  const [centerCoords, setCenterCoords] = useState<{ lat: number; lng: number }>(defaultCenter);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
   });
@@ -113,7 +118,7 @@ export default function SimulatorPage() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (draggingId === null) return;
+    if (draggingId === null || !Array.isArray(blocks)) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const newBlocks = blocks.map((b) =>
@@ -136,6 +141,26 @@ export default function SimulatorPage() {
   const params = useParams();
 
   const dataCenterId = params?.id as string;
+
+  // Fetch data center coordinates when dataCenterId changes
+  useEffect(() => {
+    async function fetchCoordinates() {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/data-center/${dataCenterId}`);
+        const json = await res.json();
+        const lat = parseFloat(json.latituid);
+        const lng = parseFloat(json.longitud);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setCenterCoords({ lat, lng });
+        }
+      } catch (err) {
+        console.error("Failed to fetch coordinates", err);
+      }
+    }
+    if (dataCenterId) {
+      fetchCoordinates();
+    }
+  }, [dataCenterId]);
 
   // Backend modules state
   const [backendModules, setBackendModules] = useState([]);
@@ -193,14 +218,15 @@ export default function SimulatorPage() {
     transformer: "transformator",
     water_treatment: "water-treatment",
     water_chiller: "water-cooling",
-    water_supply: "solarwater-treatment",
-    server_rack: "data-center",
+    water_supply: "water-cooling",
+    server_rack: "rack",
     data_rack: "data-center",
-    network_rack: "line_trasnpor",
+    network_rack:"rack1",
     wind: "wind_mill",
     solar: "solar",
     nuclear: "nuclear",
     battery: "battery",
+    server_square: "data-center", // Added mapping
   };
   // Agrupación visual de módulos por tipo
   const groupOffsets: Record<string, { x: number; y: number }> = {
@@ -212,23 +238,32 @@ export default function SimulatorPage() {
     Unknown: { x: 700, y: 100 },
   };
 
-  // Use backendModules instead of scadaData
-  const modules = backendModules.map((mod) => {
-    const baseName = mod.name?.split("_")[0]?.toLowerCase() || "default";
-    const imageKey = Object.keys(imageMap).find((key) =>
-      mod.name?.toLowerCase().includes(key)
-    );
-    return {
-      id: mod.id,
-      name: mod.name?.replaceAll("_", " ") ?? "Unknown",
-      x: mod.posX ?? 0,
-      y: mod.posY ?? 0,
-      image: `/assets/isometric_images/${imageMap[imageKey ?? baseName] || "default"}.png`,
-      status: "ok",
-    };
-  });
+  // Use backendModules instead of scadaData, skip modules with "water_supply" in name
+  const modules = backendModules
+    .filter((mod) => !mod.name?.toLowerCase().includes("water_supply"))
+    .map((mod) => {
+      const baseName = mod.name?.split("_")[0]?.toLowerCase() || "default";
+      // Prefer exact match for 'server_square'
+      let imageKey =
+        Object.keys(imageMap).find((key) =>
+          mod.name?.toLowerCase().includes(key)
+        );
+      // Special: if name includes "server_square", use "server_square" as key
+      if (mod.name?.toLowerCase().includes("server_square")) {
+        imageKey = "server_square";
+      }
+      return {
+        id: mod.id,
+        name: mod.name?.replaceAll("_", " ") ?? "Unknown",
+        x: mod.posX ?? 0,
+        y: mod.posY ?? 0,
+        image: `/assets/isometric_images/${imageMap[imageKey ?? baseName] || "default"}.png`,
+        status: "ok",
+      };
+    });
 
-  const edges = backendModules.flatMap((mod) => {
+  // Initial edges, used for simulation state
+  const initialEdges = backendModules.flatMap((mod) => {
     const inEdges =
       mod.connectedIn?.map((sourceId) => ({
         sourceId,
@@ -254,10 +289,22 @@ export default function SimulatorPage() {
     return [...inEdges, ...outEdges];
   });
 
-  const mqttTopics = modules.map((mod) => ({
-    topic: `topic/${mod.id}`,
-    status: "OK",
-  }));
+  // Simulation state for edges and logs
+  const [edges, setEdges] = useState(initialEdges);
+  const [logItems, setLogItems] = useState<string[]>([]);
+
+  // Update edges when backendModules change (to reset simulation)
+  useEffect(() => {
+    setEdges(initialEdges);
+    setLogItems([]);
+  }, [backendModules.length]);
+
+  const mqttTopics = Array.isArray(modules)
+    ? modules.map((mod) => ({
+        topic: `topic/${mod.id}`,
+        status: "OK",
+      }))
+    : [];
 
   return (
     <div className="flex flex-col h-screen p-8 w-full">
@@ -302,7 +349,7 @@ export default function SimulatorPage() {
               {isLoaded && (
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
-                  center={center}
+                  center={centerCoords}
                   zoom={17}
                   mapTypeId={mapType}
                   options={{
@@ -414,7 +461,7 @@ export default function SimulatorPage() {
             <Button
               variant="destructive"
               className="flex gap-2 items-center text-lg py-3 px-6 rounded-md"
-              onClick={() => toast.error("⚡ Low Voltage Drop triggered")}
+              onClick={handleLowVoltageDrop}
             >
               <Zap className="w-5 h-5" />
               Low Voltage Drop
@@ -438,128 +485,130 @@ export default function SimulatorPage() {
           </div>
           {/* SCADA diagram and Simulation Log side by side */}
           <div className="flex justify-center gap-4 mt-4 mb-6">
-            <div className="relative bg-[#0d1b2a] w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-700">
-              {/* Render modules */}
-              {modules.map((el, idx) => {
-                const type = el.name.split(" ")[0];
-                const groupIndex = modules.filter((m) => m.name.startsWith(type)).indexOf(el);
-                const xOffset = groupOffsets[type]?.x || 0;
-                const yOffset = groupOffsets[type]?.y || 0;
-                return (
-                  <div
-                    key={el.id}
-                    className="absolute flex flex-col items-center z-10"
-                    style={{
-                      left: el.x === 0 ? xOffset + (groupIndex % 2) * 160 : el.x,
-                      top: el.y === 0 ? yOffset + Math.floor(groupIndex / 2) * 160 : el.y,
-                    }}
-                  >
-                    <img
-                      src={el.image}
-                      alt={el.name}
-                      className="w-20 drop-shadow-md"
-                    />
-                    <span className="text-white text-sm mt-1">{el.name}</span>
-                  </div>
-                );
-              })}
-              {/* Animated connection lines */}
-              <svg className="absolute w-full h-full pointer-events-none z-0">
-                <defs>
-                  <linearGradient
-                    id="electric-flow"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#facc15" />
-                    <stop offset="100%" stopColor="#fcd34d" />
-                  </linearGradient>
-                  <linearGradient
-                    id="water-flow"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#38bdf8" />
-                    <stop offset="100%" stopColor="#0ea5e9" />
-                  </linearGradient>
-                  <style>
-                    {`
-                      .flow-line {
-                        stroke-dasharray: 8;
-                        stroke-dashoffset: 0;
-                        animation: dash 1s linear infinite;
-                      }
-                      @keyframes dash {
-                        to {
-                          stroke-dashoffset: -16;
-                        }
-                      }
-                      .mqtt-status {
-                        animation: blink 1.5s infinite;
-                      }
-                      @keyframes blink {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                      }
-                    `}
-                  </style>
-                </defs>
-                {edges.map((edge, idx) => {
-                  const getModuleById = (id: string) =>
-                    modules.find((m) => m.id === id);
-                  const src = getModuleById(edge.sourceId);
-                  const tgt = getModuleById(edge.targetId);
-                  if (!src || !tgt) return null;
-                  // Posiciones agrupadas por tipo
-                  const srcType = src.name.split(" ")[0];
-                  const srcGroupIndex = modules.filter((m) => m.name.startsWith(srcType)).indexOf(src);
-                  const srcXOffset = groupOffsets[srcType]?.x || 0;
-                  const srcYOffset = groupOffsets[srcType]?.y || 0;
-                  const x1 = src.x === 0 ? srcXOffset + (srcGroupIndex % 2) * 160 + 40 : src.x + 40;
-                  const y1 = src.y === 0 ? srcYOffset + Math.floor(srcGroupIndex / 2) * 160 + 40 : src.y + 40;
-                  const tgtType = tgt.name.split(" ")[0];
-                  const tgtGroupIndex = modules.filter((m) => m.name.startsWith(tgtType)).indexOf(tgt);
-                  const tgtXOffset = groupOffsets[tgtType]?.x || 0;
-                  const tgtYOffset = groupOffsets[tgtType]?.y || 0;
-                  const x2 = tgt.x === 0 ? tgtXOffset + (tgtGroupIndex % 2) * 160 + 40 : tgt.x + 40;
-                  const y2 = tgt.y === 0 ? tgtYOffset + Math.floor(tgtGroupIndex / 2) * 160 + 40 : tgt.y + 40;
-                  // Pick gradient for demonstration
-                  const isWater = edge.label?.includes("m³");
-                  const stroke =
-                    edge.status === "ok"
-                      ? isWater
-                        ? "url(#water-flow)"
-                        : "url(#electric-flow)"
-                      : edge.status === "warning"
-                      ? "orange"
-                      : "red";
-                  // Polyline points: from source center to (x1, y2) then to target
-                  // This makes a right-angle path (rectangular)
-                  // Label position: mid of the elbow
-                  const labelX = x1;
-                  const labelY = (y1 + y2) / 2 - 5;
+            <div className="relative bg-gray-100 dark:bg-gray-900 w-full max-w-6xl h-[800px] mx-auto rounded border border-gray-300 dark:border-gray-700 flex items-center justify-center">
+              <div className="relative w-full h-full">
+                {/* Render modules */}
+                {modules.map((el, idx) => {
+                  const type = el.name.split(" ")[0];
+                  const groupIndex = modules.filter((m) => m.name.startsWith(type)).indexOf(el);
+                  const xOffset = groupOffsets[type]?.x || 0;
+                  const yOffset = groupOffsets[type]?.y || 0;
                   return (
-                    <g key={idx}>
-                      <polyline
-                        points={`${x1},${y1} ${x1},${y2} ${x2},${y2}`}
-                        stroke={stroke}
-                        strokeWidth="3"
-                        fill="none"
-                        className="flow-line"
+                    <div
+                      key={el.id}
+                      className="absolute flex flex-col items-center z-10"
+                      style={{
+                        left: el.x === 0 ? xOffset + (groupIndex % 2) * 160 : el.x,
+                        top: el.y === 0 ? yOffset + Math.floor(groupIndex / 2) * 160 : el.y,
+                      }}
+                    >
+                      <img
+                        src={el.image}
+                        alt={el.name}
+                        className="w-20 drop-shadow-md"
                       />
-                      {edge.label && (
+                      <span className="text-foreground text-sm mt-1">{el.name}</span>
+                    </div>
+                  );
+                })}
+                {/* Animated connection lines */}
+                <svg className="absolute w-full h-full pointer-events-none z-0">
+                  <defs>
+                    <linearGradient
+                      id="electric-flow"
+                      gradientTransform="rotate(90)"
+                    >
+                      <stop offset="0%" stopColor="#facc15" />
+                      <stop offset="100%" stopColor="#fcd34d" />
+                    </linearGradient>
+                    <linearGradient
+                      id="water-flow"
+                      gradientTransform="rotate(90)"
+                    >
+                      <stop offset="0%" stopColor="#38bdf8" />
+                      <stop offset="100%" stopColor="#0ea5e9" />
+                    </linearGradient>
+                    <style>
+                      {`
+                        .flow-line {
+                          stroke-dasharray: 8;
+                          stroke-dashoffset: 0;
+                          animation: dash 1s linear infinite;
+                        }
+                        @keyframes dash {
+                          to {
+                            stroke-dashoffset: -16;
+                          }
+                        }
+                        .mqtt-status {
+                          animation: blink 1.5s infinite;
+                        }
+                        @keyframes blink {
+                          0%, 100% { opacity: 1; }
+                          50% { opacity: 0.5; }
+                        }
+                      `}
+                    </style>
+                  </defs>
+                  {edges.map((edge, idx) => {
+                    const getModuleById = (id: string) =>
+                      modules.find((m) => m.id === id);
+                    const src = getModuleById(edge.sourceId);
+                    const tgt = getModuleById(edge.targetId);
+                    if (!src || !tgt) return null;
+                    // Posiciones agrupadas por tipo
+                    const srcType = src.name.split(" ")[0];
+                    const srcGroupIndex = modules.filter((m) => m.name.startsWith(srcType)).indexOf(src);
+                    const srcXOffset = groupOffsets[srcType]?.x || 0;
+                    const srcYOffset = groupOffsets[srcType]?.y || 0;
+                    const x1 = src.x === 0 ? srcXOffset + (srcGroupIndex % 2) * 160 + 40 : src.x + 40;
+                    const y1 = src.y === 0 ? srcYOffset + Math.floor(srcGroupIndex / 2) * 160 + 40 : src.y + 40;
+                    const tgtType = tgt.name.split(" ")[0];
+                    const tgtGroupIndex = modules.filter((m) => m.name.startsWith(tgtType)).indexOf(tgt);
+                    const tgtXOffset = groupOffsets[tgtType]?.x || 0;
+                    const tgtYOffset = groupOffsets[tgtType]?.y || 0;
+                    const x2 = tgt.x === 0 ? tgtXOffset + (tgtGroupIndex % 2) * 160 + 40 : tgt.x + 40;
+                    const y2 = tgt.y === 0 ? tgtYOffset + Math.floor(tgtGroupIndex / 2) * 160 + 40 : tgt.y + 40;
+                    // Pick gradient for demonstration
+                    const isWater =
+                      edge.label?.toLowerCase().includes("water") ||
+                      edge.label?.toLowerCase().includes("m³");
+                    const stroke =
+                      edge.status === "ok"
+                        ? isWater
+                          ? "url(#water-flow)"
+                          : "url(#electric-flow)"
+                        : edge.status === "warning"
+                        ? "orange"
+                        : "red";
+                    // Polyline points: from source center to (x1, y2) then to target
+                    // This makes a right-angle path (rectangular)
+                    // Label position: mid of the elbow
+                    const labelX = x1;
+                    const labelY = (y1 + y2) / 2 - 5;
+                    return (
+                      <g key={idx}>
+                        <polyline
+                          points={`${x1},${y1} ${x1},${y2} ${x2},${y2}`}
+                          stroke={stroke}
+                          strokeWidth="3"
+                          fill="none"
+                          className="flow-line"
+                        />
                         <text
                           x={labelX}
                           y={labelY}
-                          fill="white"
+                          className="fill-foreground"
                           fontSize="12"
                           textAnchor="middle"
                         >
-                          {edge.label}
+                          {edge.label ? edge.label : "—"}
                         </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
             </div>
             <Card className="w-96 h-[800px] overflow-auto">
               <CardHeader>
@@ -567,15 +616,14 @@ export default function SimulatorPage() {
                 <CardDescription className="text-lg">Latest warnings and errors</CardDescription>
               </CardHeader>
               <div className="p-4 space-y-2">
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-base">
-                  ⚠️ Solar input too low
-                </div>
-                <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-2 rounded text-base">
-                  ❌ Battery failure
-                </div>
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-base">
-                  ⚠️ Cooling efficiency reduced
-                </div>
+                {logItems.map((log, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 rounded text-base"
+                  >
+                    {log}
+                  </div>
+                ))}
               </div>
             </Card>
           </div>
@@ -609,3 +657,51 @@ export default function SimulatorPage() {
     </div>
   );
 }
+
+  // Handler for Low Voltage Drop simulation
+  function handleLowVoltageDrop() {
+    toast.error("⚡ Low Voltage Drop triggered");
+
+    // Simulate a voltage drop on the first edge with a label
+    setEdges((prev) =>
+      prev.map((edge, idx) => {
+        if (idx === 0 && edge.label) {
+          return {
+            ...edge,
+            status: "warning",
+            label: "75 → 55 → 35 → 15 → 0",
+          };
+        }
+        return edge;
+      })
+    );
+
+    // Progressive error logs (with accumulating messages)
+    let currentLogs: string[] = [];
+    setTimeout(() => {
+      currentLogs = ["⚡ Voltage drop detected on transformer line"];
+      setLogItems([...currentLogs]);
+    }, 1000);
+    setTimeout(() => {
+      currentLogs.push("🔌 Attempting reroute of power to maintain uptime");
+      setLogItems([...currentLogs]);
+    }, 2000);
+    setTimeout(() => {
+      // Simulate rerouting by changing the first edge
+      setEdges((prev) =>
+        prev.map((edge, idx) => {
+          if (idx === 0) {
+            return {
+              ...edge,
+              sourceId: "backup_transformer",
+              label: "⚡ Rerouted: 90",
+              status: "ok",
+            };
+          }
+          return edge;
+        })
+      );
+      currentLogs.push("✅ Power rerouted successfully");
+      setLogItems([...currentLogs]);
+    }, 4000);
+  }

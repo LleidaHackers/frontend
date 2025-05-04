@@ -823,7 +823,7 @@ function FlowCanvas() {
                 }
               >
                 <Hammer className="w-4 h-4" />
-                Optimitzation
+                Go to Simulation
               </Button>
             </div>
             <div className="flex items-center space-x-2">
@@ -930,7 +930,7 @@ function FlowCanvas() {
                         if (current < statuses.length) {
                           setButtonText(statuses[current]);
                         }
-                      }, 1000 + Math.random() * 1000);
+                      }, 2000);
 
                       try {
                         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -950,29 +950,6 @@ function FlowCanvas() {
                         setTimeout(() => {
                           clearInterval(interval);
                           setNodes((prev) => [...prev, ...animatedNodes]);
-                          // Update stats based on new AI nodes
-                          newNodes.forEach((node: any) => {
-                            const data = node.data || {};
-                            setBudget((b) => b - (parseInt(data.label?.match(/\(\$(\d+)\)/)?.[1] ?? "0", 10) || 0));
-                            setOccupiedSurface((s) => s + (data.surface ?? 0));
-                            setConsumeUsage((c) => c + (data.demand ?? 0));
-                            setPowerRequired((r) => r + (data. ?? 0));
-                            setAccomulatePower((p) => p + (data.power ?? 0));
-                            setWaterUsage((w) => w + (data.waterUsage ?? 0));
-                            setAccomulatePower((p) => p + (data.power ?? 0));
-                            setChilledWaterUsage((c) => c + (data.chilledWaterUsage ?? 0));
-                            setDistilledWaterUsage((d) => d + (data.distilledWaterUsage ?? 0));
-                            setFreshWaterUsage((f) => f + (data.freshWaterUsage ?? 0));
-                            setFreshWaterProduction((f) => f + (data.freshWaterProduction ?? 0));
-                            setDistilledWaterProduction((d) => d + (data.distilledWaterProduction ?? 0));
-                            setChilledWaterProduction((c) => c + (data.chilledWaterProduction ?? 0));
-                            setInternalNetworkUsage((n) => n + (data.internalNetworkUsage ?? 0));
-                            setInternalNetworkProduction((n) => n + (data.internalNetworkProduction ?? 0));
-                            setExternalNetworkProduction((e) => e + (data.externalNetworkProduction ?? 0));
-                            setProcesProduction((p) => p + (data.procesProduction ?? 0));
-                            setDataStorageProduction((d) => d + (data.dataStorageProduction ?? 0));
-                            setInternalNetworkProduction((n) => n + (data.internalNetworkProduction ?? 0));
-                          });
                           setEdges((prev) => [...prev, ...newEdges]);
                           toast.success("Sugerencias añadidas. Pulsa 'Apply' para confirmar.");
                           setButtonText("🤖 Autocomplete with AI");

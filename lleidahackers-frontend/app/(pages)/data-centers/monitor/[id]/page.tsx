@@ -302,15 +302,27 @@ export default function Page() {
                   <CardTitle>Warnings & Logs</CardTitle>
                   <CardDescription>Recent system messages</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="text-yellow-600 font-medium">
-                    ⚠️ Cooling system operating near limit.
+                <CardContent className="space-y-2 text-sm font-mono">
+                  <div className="text-yellow-600">
+                    [10:21:07] ⚠️ Cooling system load at 92%. Efficiency decreasing.
                   </div>
-                  <div className="text-red-600 font-medium">
-                    ❌ Power surge detected on grid connection.
+                  <div className="text-red-600">
+                    [10:19:42] ❌ Grid power surge detected. Switching to UPS backup.
+                  </div>
+                  <div className="text-blue-600">
+                    [10:15:30] ℹ️ Network traffic peaked at 750 Mbps.
                   </div>
                   <div className="text-green-600">
-                    ✅ All systems nominal as of 10:45 AM.
+                    [10:12:18] ✅ Water chiller back to optimal performance.
+                  </div>
+                  <div className="text-yellow-600">
+                    [10:10:02] ⚠️ Disk latency above threshold on Rack 4B.
+                  </div>
+                  <div className="text-red-600">
+                    [10:05:55] ❌ Humidity exceeded 60% in cooling zone A.
+                  </div>
+                  <div className="text-green-600">
+                    [10:03:11] ✅ CO₂ levels stabilized at 340 ppm.
                   </div>
                 </CardContent>
               </Card>
